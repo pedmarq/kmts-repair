@@ -1,0 +1,5 @@
+<FilesMatch ".tex$">
+  AddDefaultCharset UTF-8
+</FilesMatch>
+
+# vim: ft=apache
