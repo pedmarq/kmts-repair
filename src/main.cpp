@@ -5,8 +5,9 @@
 #include "VisitTree.h"
 //#include "scanner.c"
 #include "Leitor.h"
-//#include "parser.h"	
+//#include "parser.h"
 #include "Configuracao.h"
+#include "Arena.h"
 #include "ModelChecking.h"
 #include "RefineGame.h"
 #include <typeinfo>
@@ -22,19 +23,19 @@ using namespace std;
 //extern Formula *principal;
 
 int  main(int argc , char **argv) {
- 
+
         Leitor *lf = new Leitor(argv[1]);
-               
+
         VisitTree *vs = new VisitTree(lf->lerFormulas(), 0);
-                
+
         Formula *f = (new FormulaLiteral("p",true));
-                       
+
         Arena *ar = new Arena( lf->lerEstados(), lf->lerFormulas());
-        
+
         ModelChecking mc(ar);
 
-        mc.colorir();       
-         
-        RefineGame rf = *(new RefineGame(ar,lf->lerEstados().size()));        
+        mc.colorir();
+
+        RefineGame rf = *(new RefineGame(ar,lf->lerEstados().size()));
 	return 0;
 }

@@ -1,5 +1,7 @@
 #include "ModelChecking.h"
 #include "Configuracao.h"
+#include "Arena.h"
+#include "Componente.h"
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -32,7 +34,7 @@ ModelChecking::ModelChecking(Arena* arena) {
 void ModelChecking::criarRelacioOrdemParcialComponentes() {
 
     relacaoEntreComponenetes = *(new vector < vector<bool> >(this->componentes.size()));
-    //    
+    //
     for (int i = 0; i < relacaoEntreComponenetes.size(); i++) {
         relacaoEntreComponenetes[i] = *(new vector<bool>(this->componentes.size()));
         this->componentes[i]->setRelacao(&this->relacaoEntreComponenetes);
@@ -96,7 +98,7 @@ void ModelChecking::visitComponenteRecursivamente(int posComponente) {
         }
     }
 
-    //faz relacao de ordem com o filho     
+    //faz relacao de ordem com o filho
     for (list<int>::iterator it = filhos.begin(); it != filhos.end(); it++) {
         for (int i = 0; i < (this->componentes.size()); i++) {
             this->relacaoEntreComponenetes[posComponente][i] =
@@ -122,9 +124,9 @@ void ModelChecking::colorir() {
     int posCFC = 0;
 
     list<Configuracao*> confComp = this->componentes[posCFC]->getConfiguracoes();
-    
+
     list<Configuracao*> matriz = this->arena->getMatrizConfiguracao();
-    for(list<Configuracao*>::iterator it = matriz.begin() ; 
+    for(list<Configuracao*>::iterator it = matriz.begin() ;
             it != matriz.end() ; it++){
         (*it)->setCor(C_UNCOLORED);
     }
@@ -180,7 +182,7 @@ void ModelChecking::colorir() {
                         it != confComp.end(); it++) {
                     colorirFase_1(*it);
                 }
-                //                
+                //
                 numAnt = this->componentes[posCFC]->getNumConfiguracoesColoridas();
                 //
                 while (!this->coloredConfigs.empty()) {
@@ -228,14 +230,14 @@ void ModelChecking::colorir() {
 }
 
 void ModelChecking::colorirFase_1(Configuracao *configuracao) {
-    
+
     if (configuracao->getCor() != C_UNCOLORED) {
         return;
-    }   
-      
+    }
+
     if(configuracao->getConectivo() == C_MINPT){
-        configuracao->setJogador(EXISTE); 
-    }  
+        configuracao->setJogador(EXISTE);
+    }
 
     list<Configuracao::TransicaoConfig> filhos = configuracao->getFilhos();
 
@@ -312,15 +314,15 @@ void ModelChecking::colorirFase_1(Configuracao *configuracao) {
         switch (configuracao->getConectivo()) {
             case C_MAXPT:
             case C_MINPT:
-            case C_NONE: // Aqui indica uma variavel, pois esta funcao 
+            case C_NONE: // Aqui indica uma variavel, pois esta funcao
                 // só é chamada para os pais das configuracoes nas pilhas
-         
-                
+
+
                 corFilho = configuracao->getFilhos().front().destino->getCor();
                 configuracao->setCor(corFilho);
 
                 this->coloredConfigs.push(configuracao);
-       
+
                 this->componentes[configuracao->getNumComponente()]->incrementNumConfiguracoesColoridos();
 
                 break;
@@ -405,17 +407,17 @@ void ModelChecking::colorirFase_2(int posComponente) {
             naoColoridos.push_back(*it);
         }
         if ((*it)->getConectivo() == C_NONE && (*it)->getFilhos().size() == 1) {
-          
+
             if ((*it)->isMaxFixPoint()) {
-                tipoTestemunha = C_MAXPT;                
+                tipoTestemunha = C_MAXPT;
             } else {
-                tipoTestemunha = C_MINPT;                
+                tipoTestemunha = C_MINPT;
             }
         }
     }
     stack<Configuracao*> pilhaTemporaria;
 
-    //primeiro pecorre a lista dos não coloridos pinta a depender da possibilidade        
+    //primeiro pecorre a lista dos não coloridos pinta a depender da possibilidade
 
     for (list<Configuracao*>::iterator it = naoColoridos.begin();
             it != naoColoridos.end(); it++) {

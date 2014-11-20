@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   RefineGame.h
  * Author: jan
  *
@@ -9,6 +9,8 @@
 #define	REFINEGAME_H
 
 #include "Configuracao.h"
+#include "Arena.h"
+#include "Componente.h"
 #include "Formula.h"
 
 typedef struct {
@@ -56,8 +58,8 @@ typedef struct {
 
     void print() {
         if (operation == OP_DEFN_LIT) {
-            cout << "DF _LIT " <<  ( (literal.valorLogico) ? " " : " not ") << 
-                    literal.literal << endl;          
+            cout << "DF _LIT " <<  ( (literal.valorLogico) ? " " : " not ") <<
+                    literal.literal << endl;
             cout << to << endl;
         } else if (operation == OP_MAY_TO_MUST) {
             cout << "MAY_TO_MUST " << literal.literal << endl;
@@ -189,4 +191,3 @@ private:
 };
 
 #endif	/* REFINEGAME_H */
-

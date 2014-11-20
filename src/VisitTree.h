@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   VisitTree.h
  * Author: jandson
  *
@@ -17,60 +17,59 @@
 using namespace std;
 
 class Path{
-    
+
 private:
-    
+
     list<string> caminhos;
-    
+
 public:
-       
+
     void add(string str){
         caminhos.push_back(str);
     }
-    
+
     void print(){
-        
+
         for(list<string>::iterator it = caminhos.begin() ; it != caminhos.end() ;it++){
             cout << *it;
         }
         cout << endl;
     }
-    
-    
 
-    
+
+
+
 };
 
 class VisitTree {
-    
+
 public:
     VisitTree(Formula *form, int numtab);
     void visit();
-    
+
 private:
-    
+
     Formula *form;
     int numTab ;
 };
 
 class VisitConfiguracao{
 public:
-    
+
     VisitConfiguracao (Configuracao *config, int numtab);
-    void visit(Path *path);    
+    void visit(Path *path);
     Path getPath();
-    
-        
+
+
 private:
     Configuracao *configuracao;
     int numTab;
     bool visitado;
-    
-    
-    
-    
+
+
+
+
 };
- 
+
 
 #endif	/* VISITTREE_H */
-
