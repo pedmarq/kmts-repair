@@ -1,0 +1,1910 @@
+\documentclass[normaltoc,capchap,capsec,times]{abnt}
+\usepackage[hang,flushmargin]{footmisc} 
+\usepackage[brazil]{babel} % Idioma do documento
+\usepackage[utf8]{inputenc}
+\usepackage[alf]{abntcite}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage[font=footnotesize]{caption,subcaption}
+\usepackage{chngcntr}
+\counterwithout{figure}{chapter}
+
+\usepackage{amsfonts}
+
+\usepackage{subcaption}
+
+\usepackage{amsmath}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{enumitem}
+
+\usepackage{abnt-alf}
+\usepackage[alf]{abntcite}
+
+\usepackage{tikz}
+\usetikzlibrary{backgrounds,fit,calc,shapes}
+
+\usetikzlibrary{arrows}
+\usepackage{pgfplots}
+
+\usepackage[acronym]{glossaries}
+\usepackage[paginas=nao]{tabela-simbolos}
+\usepackage{listings}
+
+\usepackage{amsthm}
+
+\lstset{extendedchars=\true}
+
+\newtheorem{defi}{Definição}[section]
+\newtheorem{lemma}{Lema}[section]
+\newtheorem{teorema}{Teorema}[section]
+
+
+\makeindex
+% Fim do preâmbulo e começo do documento
+
+%\renewcommand{\listofabreviationsname}{Lista de Siglas}
+
+\title{Implementação do Refinamento de Modelos KMTS Baseado em Verificação de Modelos com Jogos}
+\newcommand{\meutitulo}{Implementação do Refinamento de Modelos KMTS Baseado em Verificação de Modelos com Jogos}
+
+\author{Jandson Santos Ribeiro Santos}
+%\orientador{Aline Maria Santos Andrade}
+
+
+\local{Salvador}
+\data{13 de Fevereiro de 2014}
+
+%\instituicao{Universidade Federal da Bahia -- UFBA}
+
+\comentario{Monografia apresentada ao Curso de
+graduação em Ciência da Computação,
+Departamento de Ciência da Computação,
+Instituto de Matemática, Universidade Federal
+da Bahia, como requisito parcial para
+obtenção do grau de Bacharel em Ciência da
+Computação. \\ Orientadora: Profª Drª. Aline Maria Santos Andrade.}
+
+\let\oldteste\teste
+\let\oldcapa\capa
+\renewcommand{\capa}{
+\begin{center}
+
+		\includegraphics[width=0.2\textwidth,natwidth=610,natheight=642]{imagens/brasao_ufba.jpg}
+\\
+ \centering{ 
+	      \bf{
+	      \LARGE{
+			\uppercase{UNIVERSIDADE FEDERAL DA BAHIA} \\
+ 	      }
+	      \Large {
+          	\uppercase{INSTITUTO DE MATEMÁTICA} \\
+	      }
+    		  \large {
+           	\uppercase{DEPARTAMENTO DE CIÊNCIA DA COMPUTAÇÃO} \\
+          }
+          }           
+ }
+ 
+\end{center}
+
+\vfill
+
+\begin{center}
+       \bf{
+       \large{Jandson Santos Ribeiro Santos  \\  }
+       }
+\end{center}
+  
+\vspace{0.2in}
+
+\begin{center}
+	\bf{
+      	 \LARGE{ \textit{\meutitulo } } \\
+   	}
+\end{center}
+
+\vfill
+	\hspace{\stretch{1}}
+   	\vfill
+   	\begin{center}
+      \normalsize{
+          Salvador \\
+          2014
+       }
+   	\end{center}
+}
+
+\begin{document} % Começa o documento
+\capa \folhaderosto 
+
+\begin{resumo}
+KMTS são estruturas modais de Kripke capazes de representar de forma explícita informação parcial, através de transições obrigatórias e possíveis e de propriedades indefinidas nos estados do modelo. Estas indefinições permitem a expansão de um KMTS em diversas estruturas de Kripke. A verificação de modelos sobre um KMTS pode resultar em três valores: verdadeiro, falso e indefinido. %A verificação de modelos baseado em jogos, fornece ao final do processo de verificação as possíveis causas responsáveis pelo resultado de falso ou indefinido. 
+Neste último caso, quando a propriedade é consistente, existem estruturas de Kripke representadas pelo KMTS que satisfazem a propriedade requerida e podem existir modelos  que não a satisfazem. Desta forma, o refinamento do modelo KMTS deve ser realizado, a fim de se obter um ou mais KMTSs que representem somente as estruturas de Kripke que satisfazem a propriedade desejada.
+%Tratamos, neste trabalho, da implementação do algoritmo de refinamento de modelos KMTS quando a verificação de modelos resulta em indefinido.%Quando o modelo falha em satisfazer as propriedades requeridas, o projetista precisa efetuar, manualmente, as correções no mesmo. No entanto, à medida que a complexidade do sistema aumenta, maior se torna o modelo e consequentemente mais complexa torna-se a tarefa de correção. Neste cenário, um procedimento capaz de automatizar esta atividade torna-se desejável. O reparo de modelos KMTS pode acontecer em dois casos: quando da verificação de modelos resulta em false ou indefinido. O trabalho em \cite{aline} apresenta um algoritmo para o refinamento de modelos KMTS quando a verificação de modelos resulta em indefinido.
+
+Apresentamos neste trabalho a implementação de um algoritmo de refinamento de modelos KMTS, baseado na verificação de modelos com jogos, quando a verificação de modelos resulta em indefinido. Propomos, também, algumas otimizações a serem aplicadas sobre o algoritmo de refinamento. 
+
+\textbf{Palavras-chave}: Métodos Formais, Verificação de Modelos, Estruturas de Kripke, KMTS, Revisão de Modelos. 
+% Este texto é uma proposta de projeto final de curso. Propomos, aqui, a implementação de um algoritmo para o refinamento de modelos KMTS quando este resulta em indefinido ao final da verificação de modelos com lógica de 3 valores. Este problema envolve aspectos teóricos de métodos formais, lógica temporal, teoria dos jogos e verificação de modelos.
+\end{resumo}
+
+\begin{abstract}
+KMTS are Kripke modals structures that can represent explicity partial information using possible and obligated transition and undefined properties on the states of the model. These indeterminations allow the expansion of a KMTS in many Kripke Structures. The model checking over a KMTS can result in three values: true, false or undefined. For the undefined result, there are Kripke Structures, represented by the KMTS, that satisfy the desired property and another ones that don't satisfy the property. Because of that, the KMTS refinement must be done, in order to get one or more than one KMTS that represent only the Kripke Structres that satisfy the required property.
+
+
+%These structures can be used in Model Checking that is a tecnique of formal methods capable of verifying automatically the properties of the system's model. When the models doesn't satisfy the property, the system designer needs to make its correction manually. In this context, it's desirable this activity could be done automaticaly. The repair of a KMTS can be done in two cases: the model checking results in false or indefined. The work \cite{aline} proposes an algorithm of KMTS refinement when the model checking results in undefined.
+
+We present in this work the implementation of the refinement algorithm, based on the game model checking, when the model checking results in undefined.  We also propose , some optimizations that can be applied over the refinement algorithm.
+
+
+\textbf{Key-words} Formal Mehods, Model Checking, Kripke Structures, KMTS, Model Revision.
+
+\end{abstract}
+
+\listoffigures
+%\listoftables
+
+%\tableofcontents
+\sumario
+\renewcommand{\listofabreviationsname}{Lista de Abreviaturas e Siglas}
+\listadesiglas
+
+
+\chapter{Introdução}
+
+Estruturas de Kripke são modelos finitos de transição de estados utilizados na especificação do comportamento de sistemas. Estes modelos podem ser utilizados a fim de verificar de forma automática se o sistema modelado atende a certas propriedades especificadas em uma lógica temporal.
+
+A especificação de um sistema, logo nos  primeiros estágios de seu desenvolvimento, normalmente apresenta informações parciais e incompletas. Contudo, as estruturas de Kripke não são capazes de lidar explicitamente com informação parcial. 
+%Desta forma, torna-se necessário considerar outros modelos que sejam capazes de lidar com informação parcial, como o KMTS (\textit{Kripke Modal Transition System}).
+
+As estruturas de transições modais de Kripke (KMTS) são capazes de representar de forma explícita informação parcial, através de indefinições em seus estados e transições. Elas contém dois tipos de transições: transições \textit{must} que indicam a ocorrência das mesmas no modelo final do sistema e transições \textit{may} que indicam a incerteza ou possibilidade da ocorrência destas transições no modelo final. A  indeterminação de propriedades atômicas em seus estados implica no desconhecimento da ocorrência daquela propriedade naquele estado.  Estas indeterminações permitem que um KMTS seja interpretado como modelos de Kripke: as transições \textit{may} e átomos indeterminados nos estados podem ser interpretados como presença e ausência dos mesmos em estruturas de Kripke diferentes. Assim, a presença de uma única transição \textit{may} pode levar um KMTS à representação de duas estruturas de Kripke: uma com a transição em questão presente e uma outra com a transição ausente. O mesmo vale para propriedades indefinidas nos estados do modelo. Desta forma, um KMTS pode ser expandido em um conjunto de estruturas de Kripke, através da combinação destas indeterminações.
+
+%Ao representarmos o comportamento do sistema por estes modelos, podemos verificar se o mesmo obedece a certas propriedades. Esta tarefa pode ser feita de forma automática com o auxílio da verificação de modelos. 
+
+A verificação de propriedades sobre os modelos de Kripke pode ser feita de forma automática, com o auxilio de uma técnica formal denominada verificação de modelos. Esta técnica consiste basicamente em receber um modelo (Estrutura de Kripke ou KMTS) e a especificação de uma propriedade utilizando alguma lógica formal, como a lógica de árvore computacional (CTL - \textit{Computing Tree Logic})\sigla{CTL}{Computing Tree Logic}, e verificar se o modelo satisfaz a propriedade. 
+
+%Os autores em \cite{aline} apresentam o KMTS como um modelo capaz de compactar diversas estruturas de Kripke. Por isso, 
+A verificação de uma propriedade consistente $\varphi$ em um KMTS pode ter três resultados: $\top$ se todos os modelos representados pelo KMTS satisfazem a propriedade, $F$ se nenhum dos modelos representados satisfazem a propriedade ou ainda indefinido $\perp$  caso existam modelos que satisfazem a propriedade. % Esta verificação pode ser feita de forma automática utilizando uma técnica conhecida como verificação de modelos.
+
+Existem diversos algoritmos para verificação de modelos. Alguns deles como os propostos em \cite{grumbergalg} e \cite{grumberglosing} utilizam jogos para realizar a verificação. Ao final, caso a verificação de modelos não satisfaça a propriedade, um  conjunto, de estados e transições do modelo, que não satisfaz a propriedade é fornecido a fim de auxiliar o projetista no processo de correção que normalmente é feito de forma manual. No entanto, à medida que o sistema se torna mais complexo, um procedimento capaz de realizar o reparo do modelo de forma automática torna-se desejável.
+
+% Esta abordagem fornece as principais causas de falha do modelo quando a verificação resulta em indefinido. Estas causas de falhas são chamadas de testemunhas de falhas em \cite{aline} e são utilizadas para realizar o refinamento do modelo quando o processo de verificação resulta em indefinido.
+
+
+No caso do KMTS, quando a verificação de modelos resulta em $F$ ou $\perp$, torna-se necessário repará-lo.
+%Quando consideramos um KMTS, é necessário repará-lo quando a verificação de modelos resulta em $F$ ou $\perp$. 
+No primeiro caso o KMTS deve ser reparado de forma que todas as estruturas por ele representado satisfaçam a propriedade, no segundo caso deve-se filtrar do conjunto de estruturas de Kripke representadas por este KMTS os modelos que satisfazem esta propriedade. O trabalho \cite{aline} propõe algoritmos para o reparo de modelos KMTS em ambos os casos.
+
+Estes algoritmos apoiam-se  na verificação de modelos baseado em jogos proposto por \cite{grumberglosing} e utilizam as testemunhas de falhas do jogo que definem as causas responsáveis pelos resultados de $F$ ou $\perp$. %Estas testemunhas de falhas são as possíveis causas responsáveis pelo resultado de indefinido. %Desta forma, os autores observam estas testemunhas a fim de obterem as modificações necessárias a serem aplicadas sobre o modelo com o objetivo de refinar o mesmo. 
+A partir destas testemunhas, são geradas as modificações necessárias a serem aplicadas sobre o modelo.
+
+Propomos neste trabalho a implementação do algoritmo que filtra o KMTS quando a verificação de modelos resulta em $\perp$. Pesquisamos e implementamos um algoritmo de verificação de modelos com lógica de três valores baseado em jogos, bem como outros algoritmos auxiliares. Fazemos ao final considerações sobre a complexidade do algoritmo e propomos algumas melhorias sobre os mesmos.
+
+Esta monografia está organizada da seguinte forma. No capítulo \ref{cap:modelosformais} apresentamos dois modelos formais para especificação de sistemas (estruturas de Kripke e KMTS) e discutimos sobre a especificação de propriedades sobre estes modelos utilizando CTL. No capítulo \ref{cap:verificacaodemodelos} apresentamos os algoritmos de verificação de modelos baseado em jogos para lógica de dois e três valores. No capítulo \ref{cap:refinamentoModelos} apresentamos o algoritmo de refinamento de modelos KMTS. No capítulo \ref{cap:refinamento} apresentamos a nossa implementação do algoritmo e propomos algumas melhorias. Finalmente, no capítulo \ref{cap:conclusao} traçamos as considerações finais e apresentamos os trabalhos futuros.
+
+
+\chapter{Modelos Formais para Especificação e Verificação de Sistemas}\label{cap:modelosformais}
+
+A verificação de modelos é uma técnica formal que permite a verificação automática de propriedades no modelo de um sistema. Para isto, é preciso especificar tais propriedades em alguma lógica, normalmente lógica temporal, e descrever o comportamento do sistema em um modelo finito de transições de estados.
+
+%Para representar o comportamento de sistemas, podemos utilizar modelos de sistemas de transições. 
+Um modelo finito de transições de estados consiste de um conjunto de estados, que representam as situações do sistema em um determinado instante de tempo, e um conjunto de transições que indicam as mudanças entre os estados quando ocorre uma determinada ação no sistema. 
+
+%A verificação de modelos é um dos métodos existentes para a verificação formal de sistemas. Ela consiste em verificar se o sistema em questão obedece a uma determinada propriedade comportamental do mesmo. Para isto, é necessário representar o comportamento do sistema por um modelo. 
+
+Neste capítulo, apresentamos dois tipos de modelos formais de sistemas de transição: Estruturas de Kripke e as Estruturas Modais de Kripke (\textit{Kripke Modal Transition System} -- KMTS)\sigla{KMTS}{Kripke Modal Transition System}. Estes modelos podem ser utilizados para representar o comportamento de sistemas, de forma a realizar, automaticamente, a verificação de modelos. O método de verificação de modelos é tratado no capítulo \ref{cap:verificacaodemodelos}.   
+
+\section{Estruturas de Kripke}\label{sec:kripke}
+
+\begin{defi}
+\textnormal{
+Uma estrutura de Kripke é uma tupla $ M = (S, \to , L)$ onde $S$ é um conjunto de estados finitos, $\to$ é uma relação binária em S, $\to \in S^2$, tal que para todo $s \in S$, existe algum $s' \in S$ com $s \to s'$. $L$ é uma função de rotulação $L : S \to AP$, onde $AP$ é um conjunto de fórmulas atômicas. A função rotula os átomos que ocorrem em um determinado estado $s$. 
+}
+\end{defi}
+
+Uma estrutura de Kripke pode ser expressa por um grafo direcionado, a fim de facilitar a visualização do modelo. Nesta representação, cada nó do grafo é rotulado com as proposições atômicas, que valem naquele estado, enquanto as transições são representadas por arestas. Tome, por exemplo, uma estrutura de Kripke com três estados, ou seja, $S = \{s_0,s_1,s_2\}$; um conjunto $P=\{p,q,r\}$ de átomos. Considere a função de rotulação como $L(s_0)=\{p,q\},$  $L(s_1)=\{q,r\}$ e $L(s_2)=\{r\}$; e ainda as transições desta estrutura: $s_0 \to s_2$, $s_0 \to s_1$, $s_1 \to s_0$, $s_1 \to s_2$ e $s_2 \to s_2$. Esta estrutura pode ser representada pelo grafo da figura\ref{fig:ex_kripke1}.
+
+\begin{figure}[htb]
+\begin{center}
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick,every node/.style={circle,fill=blue!18,draw,minimum size=2.5em, font=\sffamily\small\bfseries}]
+
+  \node[ label=120:$s_0$ ] (0) { $ p , q$ };
+  \node[ label=(75):$s_2$ ] (2) [below right of=0] {$ r$};
+  \node[ label=(120):$s_1$ ] (1) [below  left of=0] {$ q , r$ };
+
+  \path[every node/.style={font=\sffamily\small}]
+    (0) edge node [left] {} (2)
+    (0) edge [bend right] node[right] {} (1)        
+    (1) edge node [right] {} (2)
+    (1) edge node [right] {} (2)
+        edge [bend right] node[right] {} (0)
+    (2) edge [loop right] node {} (2)       
+    ;
+
+\end{tikzpicture}
+\end{center}
+\caption[Estrutura de Kripke representado por um grafo direcionado]{Estrutura de Kripke representado por um grafo direcionado. \\ Fonte. \citeonline[p. 136]{huth}}
+\label{fig:ex_kripke1}
+\end{figure}
+
+%\subsection{Exemplo de Especificação de Sistemas}\label{sec:exemplo_especificacao_sistemas}
+
+Estruturas de Kripke podem ser utilizadas para representar o comportamento de sistemas. Cada estado representa o sistema em um determinado instante do tempo com as situações que valem naquele momento. As ações do sistema podem levar à mudanças nos estados do mesmo. Estas mudanças entre dois estados é representada pelas transições do modelo. 
+
+Segundo \cite{huth}, a restrição da relação de transição ser total tem apenas o intuito de garantir que o sistema representado nunca pare. No entanto, isto não reflete nenhuma restrição real sobre sistemas que podemos modelar. Se um sistema para, então é suficiente criar um estado de parada  para representar tal situação e criar uma aresta que sai deste estado e inside sobre  ele mesmo, ou seja, um laço. Desta forma, iremos considerar o relaxamento desta restrição, isto é, permitiremos que a relação de transições seja parcial. Vejamos agora um exemplo de especificação de sistemas através de estruturas de Kripke. 
+
+Um problema clássico, quando tratamos de sistemas onde processos rodam concorrentemente e disputam por um mesmo recurso, é garantir a exclusão mútua entre eles. Ou seja, é preciso assegurar que somente um processo, por vez, poderá acessar aquele recurso, como por exemplo a escrita de dados em um arquivo.
+
+Suponha que tenhamos dois processos que rodam concorrentemente ($P_1$ e $P_2$) capazes de ler e escrever em um mesmo arquivo. Iremos agora representar, através de uma estrutura de Kripke, o comportamento destes processos, a fim de garantir a exclusão mútua. Ou seja, queremos garantir que os dois processos não entrarão em suas regiões críticas (escrever no arquivo) ao mesmo tempo. 
+%Ler não é uma região crítica, pois, como sabemos, ler de um arquivo não implicará em nenhuma modificação, que possa, por exemplo, causar alguma perda ou alteração acidental ao mesmo. Em outras palavras, os dois processos podem ler do arquivo ao mesmo tempo que nenhum dano será causado.
+
+%Suponha que o sistema tenha sido desenvolvido na linguagem C, por exemplo, e que tenhamos identificado o comportamento do mesmo como especificado a seguir.
+%\textbf{Comportamento do sistema:} 
+Este sistema pode se encontrar em três situações distintas: processos podem estar fora de sua região crítica, solicitar o acesso a sua região crítica, ou estar em sua região crítica -- um por vez. Cada uma delas representadas, respectivamente, pelas proposições atômicas $n$, $t$ e $c$ . Cada processo passa necessariamente pelo ciclo $n \to t \to c \to n$; ou seja: não está em sua região crítica, solicita o acesso à mesma e acessa sua região crítica (quando lhe é dada a permissão) e libera a região crítica. Esse ciclo pode se repetir infinitamente, visto que após a liberação da região crítica, o mesmo pode pedir, novamente, acesso `a mesma, dando origem, outra vez, ao ciclo. Quando um processo está em sua região crítica, o outro, necessariamente, deverá estar fora desta, podendo, até mesmo, estar em um estado de solicitação à mesma. Este só poderá ter acesso à região, quando o outro processo a tiver liberado.\cite{huth}
+
+Apresentamos na figura \ref{fig:exlusaomutua} a estrutura de Kripke do sistema especificado acima. Representamos as situações  $n$, $t$ e $c$ por $n_i$, $t_i$ e $c_i$, onde $i \in \{1,2\}$ representa o processo a qual a situação se refere (processo 1 e processo 2). Desta forma o átomo $c_1$ se refere à situação $c$ do processo 1, ou seja, o processo 1 encontra-se em sua região crítica.
+
+\begin{figure}[htb]
+\begin{center}
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, visible node/.style={circle,fill=blue!18,draw,minimum size=2.5em, font=\sffamily\small\bfseries}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+\draw (0,0)  node (0) [visible node, label=120:$s_0$ ] { $ n_1 , n_2$ };
+\draw (-4,-2) node (1) [visible node, label=(75):$s_1$ ]  {$ t_1,n_2$};
+\draw (-6,-4) node (2) [visible node, label=(75):$s_2$ ]  {$ c_1,n_2$};
+\draw (-2,-4) node (3) [visible node, label=(75):$s_3$ ]  {$ t_1,t_2$};
+\draw (-4,-6) node (4) [visible node, label=(75):$s_4$ ]  {$ c_1,t_2$};
+
+\draw (4,-2) node (5) [visible node, label=(75):$s_5$ ]  {$ n_1,t_2$};
+\draw (6,-4) node (6) [visible node, label=(75):$s_6$ ]  {$ n_1,c_2$};
+\draw (2,-4) node (8) [visible node, label=(75):$s_8$ ]  {$ t_1,t_2$};
+\draw (4,-6) node (7) [visible node, label=(90):$s_7$ ]  {$ t_1,c_2$};
+
+\draw (0) to  (1);
+\draw (1) to  (2);
+\draw (1) to  (3);
+\draw (3) to  (4);
+\draw (2) to  (4);
+\draw (2) to [out=120, in=145] (0);
+
+\draw (0) to  (5);
+\draw (5) to  (8);
+\draw (5) to  (6);
+\draw (6) to  (7);
+\draw (8) to  (7);
+\draw (6) to [out=85, in=45] (0);
+\draw (4) to [out=0, in=180] (5);
+\draw (7) to [out=180, in=0] (1);
+;
+
+\end{tikzpicture}
+\end{center}
+\centering \caption[Estrutura de Kripke para exclusão mútua]{Estrutura de Kripke para exclusão mútua. \\ Fonte. \citeonline[p. 145]{huth}.}
+\label{fig:exlusaomutua}
+\end{figure}
+
+Os dois processos começam em suas regiões não críticas (estado inicial $s_0$). Se o processo 1 solicitar acesso à sua região crítica, então o sistema passa para o estado $s_1$ (observe o átomo $t_1$ no estado $s_1$); caso o processo 2 solicite acesso à sua região crítica, o sistema passará para o estado $s_5$. Observe que quando um processo está em seu estado de solicitação, o outro processo também pode solicitar acesso à mesma. É o que ocorre quando o sistema está no estado $s_1$ e passa para o estado $s_3$ e quando ele está no estado $s_5$ e passa para o estado $s_8$. Neste caso, o sistema atende  à solicitação do primeiro processo. Observe, também, que quando um processo já está em um estado de acesso à região crítica, o outro poderá, neste estado, solicitar acesso à mesma; permanecendo na região crítica o processo nela já alocado e registrando o pedido de solicitação do outro, para que seja atendido assim que a região for liberada ($s_2 \to s_4$ e $s_6 \to s_7$). Quando o processo sai de sua região crítica, ele passa para um estado que permite a solicitação e acesso a esta região pelo outro processo e/ou ele mesmo. Caso este já tenha pedido solicitação, esse passará para um estado onde o outro processo irá acessar imediatamente a região crítica ($s_4\to s_5$ e $s_7 \to s_1$). Isto assegura que o sistema liberará acesso à região de acordo com a ordem de solicitação, garantindo assim, que o cenário conhecido como inanição (processo nunca acessa o recurso desejado) nunca ocorra. Caso o outro processo não tenha solicitado acesso, o sistema deve voltar para o estado base ($s_2 \to s_0$ e $s_6 \to s_0$).
+
+%Utilizando este modelo de Kripke, podemos, por exemplo, verificar se o mesmo atender a certas propriedades como:
+%
+%\begin{itemize}
+%	\item Segurança(\textit{Safety}): Apenas um processo encontra-se em sua região crítica.
+%	\item Vivacidade(\textit{Liveness}):Todo processo que solicitar acesso a sua região crítica, eventualmente terá acesso à mesma. 
+%\end{itemize}
+%
+%A específicação destas propriedades devem ser feitas em uma lógica como a CTL (Computing Tree Logic) \sigla{CTL}{Computing Tree Logic}. Tratamos sobre a especificaç
+
+\section{KMTS-Kripke Modal Transition System}\label{sec:kmts}
+
+%A verificação de propriedades em sistemas pode ser feita nos primeiros estágios de desenvolvimento do mesmo, como, por exemplo, na fase de levantamento de requisitos. Nesta fase, é possível formalizar um modelo comportamental do sistema em questão, a fim de verificar algumas propriedades do mesmo.
+
+%Sabemos, no entanto, que durante o levantamento de requisitos, 
+Nos primeiros estágios de desenvolvimento de sistemas, é comum nos depararmos com informações parciais e/ou incompletas. Contudo, as estruturas de Kripke não são capazes de representar explicitamente este tipo de informação. Uma alternativa é considerar um conjunto de modelos que representem possíveis combinações destas informações. No entanto, esta abordagem não é eficiente na prática, pois quanto maior o número de indefinições, maior será o número de modelos. Nesse contexto, o ideal seria utilizar uma estrutura capaz de capturar estas informações parciais, como, por exemplo, o KMTS.
+
+O KMTS é uma estrutura modal de Kripke capaz de especificar, de forma explícita, o comportamento do sistema frente a informações parciais. Esta estrutura contém dois tipos de transições: as que devem ocorrer ou as que possivelmente ocorrem no sistema (\textit{may} e \textit{must}, respectivamente). Esta estrutura considera, também, a indefinição de propriedades nos estados do modelo, o que implica no desconhecimento da propriedade naquele estado, ou seja, a mesma pode ou não ocorrer no estado em questão do sistema final. \cite{huthKMTS}
+
+\begin{defi}\cite{aline}
+\textnormal{KMTS é uma tupla $M = < AP$, $S,$ $S_o,$  $R^+,$ $R^-,$  $ L$ $ > $, onde $S$ é um conjunto de estados finitos, $S_0 \subseteq S$ é o conjunto de estados iniciais, $R^+ \subseteq S \times S$ e $R^- \subseteq S \times S$  são relações de transição, tal que $R^+ \subseteq R^-$; $Lit = {AP \cup \{ \neg p | p \in AP\}}$ é o conjunto de literais sobre AP e $L: S \to 2^{Lit}$ é uma função de rotulação, tal que para todos os estados $s$ e $p \in AP$, no máximo somente um entre $p$ e $\neg p$ ocorre. As transições $R^+$ e $R^-$ correspondem às transições \textit{must} e \textit{may}, respectivamente.
+}
+\end{defi}
+
+%KMTS são modelos de Mu-calculus.  Apresentamos, abaixo, a sintaxe de Mu-calculus em sua forma normal negativa. 
+%
+%\textbf{Definição 3.} ($\mu$-calculus). Seja $AP$ um conjunto de proposições atômicas e $V$ um conjunto de variáveis proposicionais. O conjunto de literais $AP$ é definido como $Lit = AP \cup \{ \neg p | p \in AP \}$.O $\mu$-calculus em sua forma normal negativa sobre $AP$ é definida por  $\varphi ::= l | Z | \varphi \vee \varphi | \varphi \wedge \varphi | AX \varphi | EX \varphi | \mu Z.\varphi | \nu Z.\varphi $ onde  $l \in Lit$ e $Z \in V $. $AX$ significa para todos os sucessores e $EX$ significa existe um sucesso. $\mu$ denota o menor ponto fixo e  $\nu$ denota o maior ponto fixo. Uma fórmula $\varphi$ é fechada se todas as suas variáveis $Z$ são limitadas por um operador de ponto fixo $\mu$ ou $\nu$.
+
+A figura \ref{fig:ex_kmts} apresenta um exemplo de um KMTS com conjunto $Lit=\{p,\neg p\}$. As linhas seccionadas indicam as transições \textit{may} enquanto as cheias indicam as transições \textit{must}. A transição  \textit{may} $s_0 \to s_2 $  informa que esta transição possivelmente ocorre no sistema. Por outro lado, $s_1 \to s_2$ é uma transição \textit{must} e como tal informa que a mesma deve estar presente no sistema. Observe que no estado $s_1$ não temos nenhum átomo, o que indica que o átomo $p$ é indefinido neste estado, ou seja, não sabemos se ela é válida ou não em $s_1$. Vale ressaltar aqui a diferença entre a omissão dos termos de um estado em em um grafo de uma estrutura de Kripke e de um KMTS. Nesta a omissão indica a incompletude da informação, ou seja, não sabemos se tal propriedade é válida ou não no estado em questão; nessa a omissão indica que a propriedade não é válida no estado. Devemos observar, também, que esta omissão dos termos em um  grafo de uma estrutura de Kripke comum, é apenas por uma questão de conveniência, evitando que escreva-se todas as propriedades em todos os estados (informando se ela é válida ou não).
+
+\begin{figure}[htb]
+	\begin{center}
+	 \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+	  thick, every node/.style={circle,fill=blue!18,draw,minimum size=2.5em, font=\sffamily\small\bfseries}]
+	  
+		\node[ label=90:$s_0$ ] (0) { $ \neg p $ };
+		\node[ label=(90):$s_2$ ] (2) [below left of=0] {$ \neg p$};
+		\node[ label=(90):$s_1$ ] (1) [below  right of=0] {$ $ };
+		
+		\draw [dashed](0) to (1);
+		\draw [dashed](0) to (2);
+		\draw (1) to (2);
+
+	  \end{tikzpicture}
+	  \caption{Exemplo de modelo KMTS.}
+	  \label{fig:ex_kmts}
+  \end{center}
+
+\end{figure}
+
+\subsection{KMTS como um Conjunto de Estruturas de Kripke}\label{sec:conjKripke}
+
+%Como visto na seção \ref{sec:kmts}, um KMTS é capaz de representar comportamentos possíveis através das transições \textit{may} e propriedades indefinidas nos estados. Em outras palavras, a transição \textit{may} e a indefinição de propriedades em um determinado estado, informa que aquela transição e propriedade pode ou não ocorrer no modelo final do sistema. 
+
+Um KMTS, como proposto em \cite{aline}, pode ser interpretado como um conjunto de estruturas de Kripke. Nesta interpretação, uma transição \textit{may} em um KMTS representa dois modelos CTL (um com a transição em questão e outro sem) e a indefinição de um literal $l$ em um estado $s$ de um KMTS representa outros dois modelos CTL: um modelo onde $l$ é válido no estado $s$ e um outro modelo onde $l$ não é válido neste mesmo estado. Sendo assim, um KMTS representa um conjunto  com $2^n$ modelos CTL, onde $n$ é o número de indeterminações do KMTS (transições \textit{may} e propriedades indefinidas nos estados).
+
+%As indefinições do KMTS (transições \textit{may} e literais indefinidos nos estados) podem ser interpretadas como presença ou ausência dos mesmos em uma estrutura de Kripke derivadas de um KMTS. Ou seja, uma transição \textit{may} em um KMTS representa dois modelos CTL (um com a transição em questão e outro sem) e a indefinição de um literal $l$ em um estado $s$ de um KMTS representa outros dois modelos CTL: um modelo onde $l$ é válido no estado $s$ e um outro modelo onde $l$ não é válido neste mesmo estado. Sendo assim, um KMTS pode ser interpretado como um conjunto de estruturas de Kripke: $2^n$ modelos, onde $n$ é o número de indeterminações do KMTS (tranisções \textit{may} e propriedades indefinidas nos estados). \cite{aline}.
+%Basta considerar todas as combinações (presença e ausência) das informações parciais do modelo.
+
+Considere como exemplo, o KMTS da figura \ref{fig:ex_kmts}, com duas transições \textit{may} ($s_o \to s_1$ e $s_0 \to s_2$) e uma propriedade $p$ indefinida no estado $s_1$ totalizando três indeterminações. A expansão deste modelo resulta em oito estruturas de Kripke ($2^3$) apresentadas na figuras \ref{fig:conjunto_kripke}.
+
+\begin{figure}[htb]
+\begin{center}
+\resizebox{!}{6.5cm}{%
+ \begin{tikzpicture}[scale=0.95,->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, every node/.style={circle,fill=blue!18,draw,minimum size=2.5em, font=\sffamily\small\bfseries}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+\draw (-0.5,0)  node (1)  [label=60:$s_1$ ] { $ \neg p$ };
+\draw (-1.5,2)  node (0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (-2.5,0)  node (2)  [label=120:$s_2$ ] { $ \neg p$ };
+%\node [draw=none, fill=none] (l1) [right of=0] {k4};
+\draw (-3,2.8) node(l1) [draw=none, fill=white]{$K_2$:};
+\draw (-7,2.8) node(l1) [draw=none, fill=white]{$K_1$:};
+\draw (1,2.8) node(l1) [draw=none, fill=white]{$K_3$:};
+\draw (5,2.8) node(l1) [draw=none, fill=white]{$K_4$:};
+
+\draw (-7,-2) node(l1) [draw=none, fill=white]{$K_5$:};
+\draw (-3,-2) node(l1) [draw=none, fill=white]{$K_6$:};
+\draw (1,-2) node(l1) [draw=none, fill=white]{$K_7$:};
+\draw (5,-2) node(l1) [draw=none, fill=white]{$K_8$:};
+
+\draw (-4.5,0)  node (1_1)  [label=60:$s_1$ ] { $ p$ };
+\draw (-5.5,2)  node (1_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (-6.5,0)  node (1_2)  [label=120:$s_2$ ] { $ \neg p$ };
+
+\draw (1.5,0)  node (2_1)  [label=120:$s_2$ ] { $ \neg p$ };
+\draw (2.5,2)  node (2_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (3.5,0)  node (2_2)  [label=60:$s_1$ ] { $ \neg p$ };
+
+\draw (5.5,0)  node (3_1)  [label=120:$s_2$ ] { $ \neg p$ };
+\draw (6.5,2)  node (3_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (7.5,0)  node (3_2)  [label=60:$s_1$ ] { $ p$ };
+
+\draw (0) to (1);
+\draw (0) to (2);
+\draw (1) to (2);
+
+\draw (1_0) to (1_1);
+\draw (1_0) to (1_2);
+\draw (1_1) to (1_2);
+
+\draw (2_0) to (2_1);
+\draw (2_2) to (2_1);
+
+\draw (3_0) to (3_1);
+\draw (3_2) to (3_1);
+
+\draw (-0.5,-4.5)  node (4_1)  [label=60:$s_1$ ] { $ \neg p$ };
+\draw (-1.5,-2.5)  node (4_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (-2.5,-4.5)  node (4_2)  [label=120:$s_2$ ] { $ \neg p$ };
+
+\draw (-4.5,-4.5)  node (5_1)  [label=60:$s_1$ ] { $ p$ };
+\draw (-5.5,-2.5)  node (5_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (-6.5,-4.5)  node (5_2)  [label=120:$s_2$ ] { $ \neg p$ };
+
+\draw (1.5,-4.5)  node (6_1)  [label=120:$s_2$ ] { $ \neg p$ };
+\draw (2.5,-2.5)  node (6_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (3.5,-4.5)  node (6_2)  [label=60:$s_1$ ] { $ \neg p$ };
+
+\draw (5.5,-4.5)  node (7_1)  [label=120:$s_2$ ] { $ \neg p$ };
+\draw (6.5,-2.5)  node (7_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (7.5,-4.5)  node (7_2)  [label=60:$s_1$ ] { $ p$ };
+
+\draw (4_1) to (4_2);
+\draw (5_1) to (5_2);
+
+\draw (6_2) to (6_1);
+\draw (6_0) to (6_2);
+\draw (7_2) to (7_1);
+\draw (7_0) to (7_2);
+
+%\node[ label=(75):$s_76$ ] (70) [ left of=0] {$ r$};
+;
+
+\end{tikzpicture}
+}
+\end{center}
+\centering \caption[Expansão do KMTS da figura \ref{fig:ex_kmts} em um conjunto de estruturas
+de Kripke]{Expansão do KMTS da figura \ref{fig:ex_kmts} em um conjunto de estruturas de Kripke.}
+\label{fig:conjunto_kripke}
+\end{figure}
+
+Vale ressaltar, que o inverso não é necessariamente verdade. Isto é, dado um conjunto de estruturas de Kripke pode ser necessário considerar mais de um KMTS para representar tal conjunto. Por exemplo, para o conjunto \mbox{$\{K_1, K_2, K_5, K_6\}$} da figura \ref{fig:conjunto_kripke}, é necessário dois KMTSs ($M_1$ e $M_2$, apresentados na figura \ref{fig:kmts2}). O KMTS $M_1$ compacta os modelos $K_1$ e $K_2$, enquanto $M_2$ compacta os modelos $K_5$ e $K_6$.
+
+
+\begin{figure}[htb]
+\begin{center}
+\resizebox{!}{3.5cm}{%
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, every node/.style={circle,fill=blue!18,draw,minimum size=2.5em, font=\sffamily\small\bfseries}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+  \node[ label=120:$s_0$ ] (0) { $ \neg p$ };
+  \node[ label=(75):$s_1$ ] (1) [right of=0] {$ $};
+  \node[ label=(105):$s_2$ ] (2) [below of=0] {$ \neg p$};
+  
+    \node[ label=90:$s_0$ ] (1_0) [right of=1] { $ \neg p$ };
+  \node[ label=(75):$s_1$ ] (1_1) [right of=1_0] {$ $};
+  \node[ label=(105):$s_2$ ] (1_2) [below of=1_0] {$ \neg p$};
+  
+\draw (-1.5,1) node [draw=none,fill=white](l1) {$M_1:$};
+\draw (4.1,1) node [draw=none,fill=white](l1) {$M_2:$};
+
+%\node[ label=(75):$s_76$ ] (70) [ left of=0] {$ r$};
+
+\draw (0) to (1);
+\draw (0) to (2);
+\draw (1) to (2);
+
+\draw (1_1) to (1_2);
+;
+
+\end{tikzpicture}
+}
+\end{center}
+\centering \caption{ Conjunto KMTS para os modelos $K_1, K_2, K_5,$ e $K_6$ da figura \ref{fig:conjunto_kripke}.}
+\label{fig:kmts2}
+\end{figure}
+
+\section{Especificação e Verificação de Propriedades}
+
+Ao representarmos o comportamento do sistema por um modelo, como as estruturas de Kripke ou KMTS, podemos verificar a correção do mesmo frente a propriedades desejadas. Para isto, é preciso especificá-las em alguma lógica formal, normalmente, lógica temporal. Neste trabalho, estamos interessados em propriedades representadas pela CTL.
+
+\subsection{Lógica CTL}
+
+A CTL é uma lógica temporal que permite fazer referência ao futuro. Ela modela o tempo em uma sequência de estados (caminho computacional -- veja definição \ref{def:caminhocomputacional}) que se estende infinitamente para o futuro. Estruturas de Kripke (seção \ref{sec:kripke}) são modelos desta lógica e a partir de agora, iremos nos referir às estruturas de Kripke como modelos CTL. 
+
+%No KMTS a relação de transição pode ser parcial. Desta forma, a relação de transição dos modelos CTL representados por estas estruturas podem, também, ser parcial. Sendo assim, caminhos computacionais nestas estruturas podem ser finitos.
+%ao interpretarmos CTL por estas estruturas, caminhos computacionais podem ser finitos.
+\begin{defi}\label{def:caminhocomputacional}
+\textnormal{\cite{huth} Um caminho computacional em uma estrutura de Kripke $M$ é uma sequência infinita\footnote{No KMTS a relação de transição pode ser parcial. Desta forma, caminhos computacionais nos modelos CTL, expandidos por estas estruturas, podem ser finitos. } de estados $s_0,s_1,\dots$, em $ S$, tal que, para cada $i \geq 1 $, $s_i \to s_{i+1}$. Representamos este caminho por $s_1, s_2, \dots$} 
+\end{defi}
+
+%Na definição original um caminho computacional é definido como uma sequência infinita. No entanto, ao considerarmos a relação de transição como parcial, permitimos que um caminho computacional possa ser finito. De fato, todos os caminhos computacionais podem ser finitos, basta que não existam ciclos no modelo.
+
+%Todos os possíveis caminhos computacionais, a partir de um estado $s_i$ de uma estrutura de Kripke $M$, podem ser expressos por uma árvore computacional. 
+Consideremos, por exemplo, a estrutura de Kripke representada na figura \ref{fig:ex_kripke1}. Se considerarmos todos 
+todos os possíveis caminhos a partir de $s_0$, obtemos a árvore computacional da figura \ref{fig:caminho_computacional}.
+
+\begin{figure}[htb]
+\begin{center}
+%\resizebox{!}{10cm}{%
+\tikzset {main node/.style = {circle, draw, fill=blue!18, align=center, minimum size = 2.5 em}
+}
+ \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2cm,align=center,
+  thick, level/.style={sibling distance = 5cm/#1,
+  level distance = 2cm}] 
+
+\node [main node, label = $s_0$] (0){$p$ \\ $q$}
+  child {node [main node, label=75:$s_1$] (1) {$q$ \\ $r$}
+  	child{node [main node, label=90:$s_0$] (1_1) {$p$ \\ $q$}
+  		child{node [main node, label=90:$s_1$] (1_1_1) {$q$ \\ $r$}
+			child{node [draw=none] (r1) {$\vdots$}} 		
+  		}  		
+  		child{node [main node, label=90:$s_2$] (1_1_2) {$r$}
+			child{node [draw=none] (r2) {$\vdots$}}  		
+  		}
+  	}
+  	child{node [main node, label=75:$s_2$] (1_2) {$r$}
+		child{node [main node, label=75:$s_2$] (1_2_1) {$r$}
+			child{node [draw=none] (r3) {$\vdots$}}  			
+		}  	
+  	}
+  }
+  child {node [main node, label=75:$s_2$] (2) {$r$}
+		child{node [main node, label=75:$s_2$] (2_1) {$r$}
+			child{node [main node, label=75:$s_2$] (2_1_1) {$r$}
+				child{node [draw=none] (r4) {$\vdots$}}  				
+			}
+		}  	
+  }
+;
+
+\end{tikzpicture}
+%}
+\end{center}
+\caption [Caminho computacional da Estrutura de Kripke da figura \ref{fig:ex_kripke1}]{Caminho computacional da Estrutura de Kripke da figura \ref{fig:ex_kripke1}. \\ Fonte. \citeonline[p. 137]{huth}}
+\label{fig:caminho_computacional}
+\end{figure}
+
+Em CTL, é possível quantificar os caminhos, ou seja, se existe uma sequência de estados do modelo que satisfaz uma fórmula $\Psi$ ou se todos os caminhos do modelo, a partir de um estado $s$ satisfazem $\Psi$. A definição \ref{def:CTL} apresenta a sintaxe geral das fórmulas da CTL e a definição \ref{def:ctlnormalnegativa} a forma normal negativa da mesma.
+
+\begin{defi}\label{def:CTL}
+\textnormal{Seja $p$ uma fórmula atômica, define-se $\Psi$ uma fórmula da CTL por:\\
+$\Psi ::= \top \;\vert \; F \; \vert $ $ p $ $\vert$ $ ( \neg \Psi)$ $\vert \Psi \; \wedge \; \Psi \; \vert $ $ \Psi \; \vee \; \Psi \;\vert $  $  \Psi \; \rightarrow \; \Psi \; \vert $ $ AX \; \Psi \; \vert $ $ EX \; \Psi \; \vert \; $ $ AF \; \Psi \; \vert $ $ EF \; \Psi $ \\
+$\Psi ::= EG \; \Psi \; \vert $ $ AG \; \Psi \; \vert $ $ A[\;\Psi \;U \;\Psi\;]\;\vert $ $ E\;[\;\Psi \;U \;\Psi\;] $}
+\end{defi}
+
+Em CTL todos os conectivos (com exceção de $\vee,\wedge$ e $\to$) são formados por um par de símbolos: A ou E seguido de outro símbolo (X, F, G ou U). O símbolo A significa ``para todos os caminhos'' e E ``existe um caminho''. Os demais símbolos são: X (próximo estado), F(existe um estado no futuro), G(futuramente é sempre verdade), e U(verdade até).
+
+$AX \Psi $ -- A partir do estado atual e para todos os próximos estados de todos os caminhos $\Psi$ é verdade.
+
+$EX \Psi$ -- Existe um caminho a partir do estado atual onde o próximo estado $\Psi$ é verdadeiro. 
+
+$AF \Psi$ -- Para todos os caminhos, existe um caminho no futuro em que  será $\Psi$ verdade.
+
+$EF \Psi$ -- Existe um caminho, onde futuramente $\Psi$ será verdadeira em algum estado.
+
+$EG \Psi$ -- Existe um caminho, onde $\Psi$ é verdade para todos os estados.
+
+$AG \Psi$ -- Para todos os caminhos possíveis, $\Psi$ é verdade para todos os estados.
+
+$ A[\Psi \;U \;\Psi']$ -- Para todos os caminhos possíveis, $\Psi$ é verdade, a partir do estado atual, e em todos os próximos estados até  $\Psi'$passar a ser verdadeira em algum estado.
+
+$ E[\Psi \;U \;\Psi']$ -- Existe um caminho, onde $\Psi$  é verdade em todos os próximos estados até $\Psi'$  passar a ser verdadeira em algum estado.
+
+\begin{defi}\label{def:ctlnormalnegativa}
+\textnormal{Seja $AP$ um conjunto de átomos e $Lit$ o conjunto de literais de $AP$, isto é, $Lit = AP \cup \{\neg p | p \in AP \}$; e $l \in Lit$ um literal qualquer. A CTL em sua forma normal negativa é definida como segue:\\
+$\Psi ::= \top \;\vert \; F \;\vert $ $ l $ $\vert$  $ \Psi\; \wedge \;\Psi \;\vert \; $ $ \Psi \;\vee \;\Psi\; \vert $   $ AX \; \Psi \;\vert $ $ EX \; \Psi \;$  \\
+$\Psi ::= $ $ A[\Psi \;U \;\Psi]\;\vert $ $ E[\Psi \;U \;\Psi] \;\vert$ $A[\Psi \;V \;\Psi] \; \vert$ $E[\Psi \;V \;\Psi]$
+}
+
+\end{defi}
+
+$A[\Psi\; V\; \Psi']$ -- Para todos os caminhos possíveis, $\Psi'$ é verdadeira, a partir do estado atual, e em todos os próximos estados até $\Psi$ passe a ser verdadeira em algum estado. Ou ainda, para todos os caminhos possíveis, $\Psi'$ é verdadeira, a partir do estado atual e em todos os próximos estados e $\Psi$ nunca é satisfeita.
+
+$E[\Psi \;V \;\Psi']$ -- Existe um caminho onde $\Psi'$ é verdadeira, a partir do estado atual, e em todos os próximos estados até $\Psi$ passar a ser verdadeira em algum estado. Ou ainda, existe um caminho onde $\Psi'$ é verdadeira, a partir do estado atual e em todos os próximos estados e $\Psi$ nunca é satisfeita.
+
+Voltemos ao exemplo da figura \ref{fig:ex_kripke1} que modela comportamento de um sistema, a fim de garantir a exclusão mútua entre os dois processos que disputam pela escrita de dados em um arquivo. Suponhamos, que agora queiramos verificar certas propriedades deste modelo como, por exemplo, se sempre que um processo solicita acesso à região crítica, em algum momento ele será atendido (vivacidade): esta era uma das características desejadas durante a fase de especificação. Esta propriedade tem como objetivo evitar a ocorrência do problema de inanição. A correção do sistema pode ser verificada, formalizando esta propriedade na lógica CTL e verificando se o modelo da figura \ref{fig:ex_kripke1} satisfaz a propriedade. Veremos no capítulo \ref{cap:verificacaodemodelos} que esta verificação pode ser feita de forma automática, apresentando somente o modelo e a propriedade desejada. Apresentamos abaixo a propriedade especificada em CTL:
+
+\begin{itemize}
+	\item Vivacidade: $ (t_1 \to AF c_1) \vee (t_2 \to AF c_2) $. Esta fórmula informa que se o processo $t_i$ (com $i \in \{1,2\}$) solicita acesso à região crítica ($t_i$), então, a partir do estado atual (solicitação) é verdade que para qualquer caminho, necessariamente no futuro, o processo $P_i$ alcançará a região crítica. Podemos observar que isto é satisfeito. Considere os estados do sistema onde a solicitação ocorre. $P_i$ solicita em $s_1,s_3,s_7$ e $s_8$; e a partir desses estados, por qualquer caminho, é possível alcançar um dos estados $s_2,s_4$, onde $c_1$ é satisfeita. O mesmo ocorre para o processo $P_2$, as solicitações são feitas nos estados $s_3,s_4,s_5$ e $s_8$ e a partir destes estados sempre é possível alcançar um dos estados $s_6,s_7$, onde $c_2$ é satisfeita.
+		
+\end{itemize}
+
+\subsection{Exemplo de Verificação Utilizando KMTS}
+
+Podemos modelar o comportamento do sistema por um KMTS, quando precisarmos lidar com informação parcial, e especificar as propriedades em CTL, a fim de verificar se o modelo satisfaz as mesmas. 
+%No entanto, para o KMTS utilizaremos a semântica apresentada na seção \ref{sec:conjKripke}, onde o mesmo representa um conjunto de estruturas de Kripke. 
+Os autores em \cite{aline} consideram um KMTS como uma estrutura que compacta um conjunto de modelos CTL. Por isso, ao verificarmos uma propriedade, três resultados podem ocorrer: verdadeiro $(V)$, se todos os modelos representados pelo KMTS satisfazem a propriedade, falso $(F)$ caso contrário e indefinido $(\perp)$ se a propriedade for insatisfazível ou se existem modelos, no conjunto expandido pelo KMTS, que satisfazem a propriedade e outros que não a satisfazem. Tome como exemplo o KMTS da figura \ref{fig:ex_kmts} e as seguintes propriedades em CTL: 
+\begin{enumerate}
+	\item $EF \neg p$
+	\item $EF p$
+\end{enumerate}
+
+Consideremos que a verificação será feita tomando $s_0$ como estado inicial. Dessa forma, o modelo satisfaz a propriedade 1, pois o próprio estado $s_0$ satisfaz $\neg p$. Observe, também, que todos os modelos da figura \ref{fig:conjunto_kripke} satisfazem a propriedade 1. No entanto, a propriedade 2 é indefinida no KMTS, pois $p$ ocorre de forma indefinida no estado $s_1$ e para alcançá-lo é preciso passar pela transição \textit{may} $s_0 \to s_1$. Ou seja, nos modelos em que a transição $s_0 \to s_1$ não ocorre e/ou a propriedade em $s_0$ é $\neg p$ a propriedade 2 não é satisfeita. Logo temos um modelo que a satisfaz e outros que não a satisfazem.  Podemos observar na figura \ref{fig:conjunto_kripke} que os $K_1$ e $K_8$ são os únicos que satisfazem a propriedade, enquanto todos os outros não a satisfazem.
+
+\chapter{Verificação de Modelos}\label{cap:verificacaodemodelos}
+
+A verificação de modelos (\textit{Model Checking}) é uma técnica formal que permite a verificação automática de propriedades no modelo do sistema. Ela consiste em receber como entrada um modelo finito $M$ e uma fórmula $\varphi$ em alguma lógica apropriada e verificar se $M$ a partir de um determinado estado $s_0$ satisfaz a fórmula $\varphi$, ou seja, se $M, s_0 \models \varphi$. Em caso negativo, espera-se que o procedimento informe o caminho do modelo que não satisfaz $\varphi$, para que assim, o projetista possa fazer a devida correção.
+
+A verificação de modelos consiste em três etapas: modelagem, especificação e verificação. Na modelagem, a descrição do sistema é apresentada em um modelo de estados finitos, como por exemplo, estruturas de Kripke ou KMTS. A especificação é descrita em uma lógica formal, normalmente lógica temporal; neste trabalho, estamos interessados em propriedades especificadas em CTL. Finalmente, a etapa de verificação consiste em analisar se o modelo descrito satisfaz a fórmula especificada.
+
+%Ao realizarmos a verificação de modelos com o KMTS, três resultados podem ocorrer: verdadeiro $(V)$, falso $(F)$. Isso se deve ao fato, do KMTS representar um conjunto de estruturas de Kripke. Dessa forma, a expansão desse KMTS pode resultar em um conjunto, onde existem modelos que satisfazem a propriedade deseja, e outros que não a satisfazem.
+
+
+Existem diversos algoritmos de verificação de modelos, mais detalhes em \cite{huth} e \cite{clarke}. Neste trabalho, no entanto, estamos interessados em realizar o refinamento do modelo KMTS quando a verificação deste resulta em indefinido. O algoritmo de verificação de modelos,  baseado em jogos, proposto em \cite{grumbergalg} informa as possíveis causas de falha para este caso. Estas informações podem ser usadas para realizar o refinamento do modelo (capítulo \ref{cap:refinamentoModelos}). 
+% Neste capítulo, apresentamos o algoritmo de verificação de modelos baseado em teoria dos jogos \cite{grumbergalg} e \cite{grumberglosing}. 
+ Na seção \ref{sec:modelcheckingjogos} tratamos sobre o algoritmo baseado em jogos para lógica CTL com dois valores enquanto na seção \ref{sec:modelchecking3valores}, tratamos do algoritmo baseado em jogos para lógica CTL com três valores.
+
+\section{Verificação de Modelos com Jogos}
+\label{sec:modelcheckingjogos}
+
+Dada uma estrutura de Kripke $M = \{ S,\to, L \}$ e uma fórmula CTL $\varphi$ em sua forma normal negativa (definição \ref{def:ctlnormalnegativa} no capítulo \ref{cap:modelosformais} ), o algoritmo para verificação de modelos proposto em \cite{grumbergalg} consiste em um jogo entre dois jogadores: $\exists$ (Eva) e $\forall$ (Abelardo). Eva (jogador $\exists$) tenta provar a satisfazibilidade da fórmula, enquanto Abelardo (jogador $\forall$) tenta refutar a mesma. O jogo consiste em uma arena (grafo do jogo) e um conjunto de regras que determina os movimentos realizáveis e as configurações em que cada jogador pode jogar .
+
+A arena é formada pelo produto cartesiano dos estados de M com as sub-fórmulas de $\varphi$, ou seja, $S \times sub(\varphi)$, onde $sub(\varphi)$ é o conjunto de sub-fórmulas de $\varphi$ como definido abaixo.
+
+\begin{defi}
+\textnormal{
+\cite{grumbergalg} Dada uma fórmula $\varphi$ qualquer da CTL da forma $A[\varphi_1 U \varphi_2$, $E[\varphi_1 U \varphi_2$, $A[\varphi_1 V \varphi_2$ ou $E[\varphi_1 V \varphi_2]$. Sua expansão, representada por $exp(\varphi)$ é definida da seguinte forma:
+\begin{description}[noitemsep]
+\item $\varphi = A[\varphi_1 U \varphi_2]$ : $exp(\varphi) = \{ \varphi$, $\varphi_2 \vee (\varphi_1 \wedge AX \varphi)$, $\varphi_1 \wedge AX \varphi$, $AX \varphi \}$
+\item $\varphi = E[\varphi_1 U \varphi_2]$ : $exp(\varphi) = \{ \varphi$, $\varphi_2 \vee (\varphi_1 \wedge EX \varphi)$, $\varphi_1 \wedge EX \varphi$, $EX \varphi \}$
+\item $\varphi = A[\varphi_1 V \varphi_2]$ : $exp(\varphi) = \{ \varphi$, $\varphi_2 \wedge (\varphi_1 \vee AX \varphi)$, $\varphi_1 \vee AX \varphi$, $AX \varphi \}$
+\item $\varphi = E[\varphi_1 V \varphi_2]$ : $exp(\varphi) = \{ \varphi$, $\varphi_2 \wedge (\varphi_1 \vee EX \varphi)$, $\varphi_1 \vee EX \varphi$, $EX \varphi \}$
+\end{description}
+}
+\end{defi}
+
+\begin{defi}
+\textnormal{
+\cite{grumbergalg} O conjunto de sub-fórmulas $sub(\varphi)$ é definida como segue:
+}
+\begin{description}[noitemsep]
+\item Se $\varphi = \top, F$ ou $l$; onde $l \in Lit$, então $sub(\varphi) = \{\varphi\}$
+\item Se $\varphi = \varphi_1 \wedge \varphi_2$ ou $\varphi_1 \vee \varphi_2$, então $sub(\varphi)$ = $ \{\varphi\} \cup sub(\varphi_1) \cup sub(\varphi_2)$
+\item Se $\varphi$ = $AX\varphi_1$ ou $EX\varphi_1$, então $sub(\varphi) = \{\varphi\} \cup sub(\varphi_1)$
+\item Se $\varphi$ = $A[\varphi_1 U \varphi_2]$, $E[\varphi_1 U \varphi_2]$, $A[\varphi_1 V \varphi_2]$ ou $E[\varphi_1 V \varphi_2]$, então $sub(\varphi)$ = $exp(\varphi) \cup sub(\varphi_1) \cup sub(\varphi_2)$
+
+\end{description}
+\end{defi}
+
+
+
+
+As configurações são elementos da arena e denotadas por $C_i = (s_j,\psi)$, onde $C_i \subseteq S \times sub(\varphi)$, $s_i \in S$ e $\psi \in sub(\varphi)$. Em cada configuração somente um dos jogadores pode realizar o movimento. O jogo começa na configuração $C_0 = (s_0,\phi)$ e o jogador da vez escolhe, de acordo com as regras do jogo e sua estratégia, a próxima configuração, onde então, o jogador desta fará o seu movimento e assim sucessivamente até que o jogo acabe. A esta sequência de movimentos, dá-se o nome de jogada. 
+
+\begin{defi}
+\textnormal{
+Uma jogada é uma sequência, possivelmente infinita, de configurações denotada por: $C_0 \to C_1 \to \dots$.
+}
+\end{defi} 
+
+Os movimentos continuam a ser executados até que o jogo acabe. O jogo termina somente em dois casos: ao alcançar uma configuração final (configuração sem transições para outras configurações) ou se os participantes do jogo, Eva ($\exists$) e Abelardo ($\forall$), jogam infinitamente frequentemente, isto é, eles jogam em um ciclo da arena. Uma jogada é infinita se e somente se uma das seguintes sub-fórmulas ocorre: $\mbox{AU, EU, AV e EV}$. A esta sub-fórmula que ocorre na jogada, \cite{grumbergalg} dá-se o nome de testemunha.
+
+As regras do jogo determinam as configurações de cada jogador e os movimentos que podem ser realizados em cada configuração. Elas são definidas de acordo com a sub-fórmula $\varphi$ que ocorre na configuração $C_i$. As regras são definidas como segue:
+
+\begin{enumerate}[label=(\arabic*),noitemsep]
+\item $C_i = (s,false)$, $C_i = (s,true)$, $C_i = (s,l)$, onde $l$ é um literal.  Estas são as configurações terminais. Nestas configurações, não há escolha de um movimento, o jogo simplesmente acaba, desta forma não faz diferença qual o jogador da configuração. Por isso, podemos atribuir Abelardo ou Eva para a tarefa. Sem perda de generalidade,  Eva foi escolhida.
+\item $C_i = (s,AX\varphi)$, Abelardo ($\forall$) escolhe uma transição $s \to s'$ em $M$ e $C_{i+1}=(s',\varphi)$.
+\item $C_i = (s,EX\varphi)$, Eva ($\exists$) escolhe uma transição $s \to s'$ em $M$ e $C_{i+1}=(s',\varphi)$.
+\item $C_i = (s,\varphi_1 \wedge \varphi_2)$, Abelardo($\forall$) escolhe $j \in \{ 1,2\}$ e $C_{i+1}=(s,\varphi_j)$.
+\item $C_i = (s,\varphi_1 \vee \varphi_2)$, Eva ($\exists$) escolhe $j \in \{ 1,2\}$ e $C_{i+1}=(s,\varphi_j)$.
+\item $C_i = (s, A(\varphi_1 U \varphi_2))$, Eva ($\exists$) escolhe $C_{i+1}=(s,\varphi_2 \vee (\varphi_1 \wedge AX \mbox{A}(\varphi_1 U \varphi_2)))$.
+\item $C_i = (s, E(\varphi_1 U \varphi_2))$, Eva ($\exists$) escolhe $C_{i+1}=(s,\varphi_2 \vee (\varphi_1 \wedge EX \mbox{E}(\varphi_1 U \varphi_2)))$.
+\item $C_i = (s, A(\varphi_1 V \varphi_2))$, Eva ($\exists$) escolhe $C_{i+1}=(s,\varphi_2 \wedge (\varphi_1 \vee AX \mbox{A}(\varphi_1 V \varphi_2)))$.
+\item $C_i = (s, E(\varphi_1 V \varphi_2))$, Eva ($\exists$) escolhe $C_{i+1}=(s,\varphi_2 \wedge (\varphi_1 \vee EX \mbox{E}(\varphi_1 V \varphi_2)))$.
+\end{enumerate}
+
+Observe que as regras (6) a (9) são deterministas, ou seja, somente um movimento é possível. Por esta razão, não faz diferença qual o jogador da configuração. Assim, sem perda de generalidade, Eva ($\exists$) foi escolhida como a jogadora destas configurações. 
+
+%Os movimentos continuam a ser executados até que o jogo acabe. O jogo termina somente em dois casos: ao alcançar uma configuração final ou se os jogadores jogam infinitamente frequentemente, isto é, eles jogam sempre por um ciclo na arena.
+
+Cada configuração da arena é colorida a depender do resultado obtido pelos movimentos realizados a partir daquela configuração: $F$ se Abelardo ($\forall$) tem estratégia de ganhar independente do outro jogador, $\top$ caso Eva ($\exists$) tenha estratégia de ganhar independente das escolhas do outro jogador.
+
+A estratégia é uma função parcial $F: C \to C$, em que o domínio é o conjunto de configurações, em que o jogador realiza o seu movimento obedecendo às regras do jogo. Um jogador tem uma estratégia de ganhar se ele vence em todas as configurações da jogada de acordo com a sua estratégia e se determinadas condições ocorrem no grafo do jogo. Estas condições dependem do jogador e são definidas em \cite{grumbergalg} como segue. %As estratégias de ganhar, propostas em \cite{grumbergalg}, de cada jogador são :
+
+\begin{description}[noitemsep]
+	\item Abelardo ($\forall$) tem estratégia de ganhar, ou seja, vence o jogo, se e somente se uma das seguintes condições ocorre:
+	\begin{enumerate}[label=(\arabic*),noitemsep]
+		\item a jogada é finita e termina em uma configuração final do tipo $C_i = (s,false)$ ou $C_i = (s,l)$, onde $l$ é um literal e $l \notin L(s)$.
+		\item a jogada é infinita e a testemunha tem uma das seguintes formas: $AU$ ou $EU$.
+	\end{enumerate}
+	
+	\item Eva ($\exists$) tem estratégia de ganhar, ou seja, vence o jogo, se e somente se uma das seguintes condições ocorre:
+	\begin{enumerate}[label=(\arabic*),noitemsep]
+		\item a jogada é finita e termina em uma configuração final do tipo $C_i = (s,true)$ ou $C_i = (s,l)$, onde $l$ é um literal e $l \in L(s)$.
+		\item a jogada é infinita e termina e a testemunha tem uma das seguintes formas: $AV$ ou $EV$
+	\end{enumerate}
+\end{description}
+
+O algoritmo de verificação de modelos baseado em jogos consiste em colorir a arena. Ele decide se $M,s_0 \models \varphi$ de acordo com a cor ($ \top$ ou $ F$) atribuída à configuração inicial $C_0 = (s_0,\varphi)$ da arena. Apresentamos na seção \ref{sec:arena2valores} como construir a arena e na seção \ref{sec:alg2valores} como colorir a mesma. 
+
+\subsection{Arena do Jogo }\label{sec:arena2valores}
+
+A arena do jogo consiste em um conjunto de configurações e de arestas. Estas representam os possíveis movimentos dos jogadores em cada configuração. Como estamos interessados em saber o resultado da jogada iniciada na configuração $C_0 = (s_0,\varphi)$, onde $s_0 \in S$ é o estado inicial de um modelo $M$, a arena será construída a partir dela. A cada configuração alcançada, aplica-se as regras do jogo a fim de obter as arestas e estados alcançáveis a partir da mesma. Este processo se propaga recursivamente visitando-se os nós filhos desta configuração, até alcançar um estado final ou fechar um ciclo. O resultado é um grafo $G = (V,E)$, onde $V \subseteq S \times sub(\varphi)$ é o conjunto de configurações do jogo e $E \subseteq V \times V$ o conjunto de arestas. 
+
+\begin{figure}[htb]
+\begin{center}
+\resizebox{!}{8cm}{%
+\tikzset {main node/.style = {rectangle, draw, fill=blue!18, align=center},
+eva/.style = {ellipse, draw, fill=blue!18, align=center}
+}
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, level/.style={rectangle,draw, fill=blue!18,draw,font=\sffamily\small\bfseries,sibling distance = 5cm,
+  level 2/.style={sibling distance=5cm},
+    level 3/.style={sibling distance=5cm},
+        level 7/.style={sibling distance=5cm},
+  level distance = 1.25cm}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+\node [eva, label = 180:$C_0$] (0){$s_0 \vdash A(pVq)$}
+  child {node [main node, label=180:$C_1$] (1) {$s_0 \vdash q \wedge (p \vee AX A(pVq))$}
+  	child{node [eva, label=180:$C_2$] (2) {$s_0 \vdash q$}
+  	}
+  	child{node [eva, label=180:$C_3$] (3) {$ s_0 \vdash p \vee AX A(pVq)$}
+  		child{node [eva,label=180:$C_4$] (4) {$s_0 \vdash p$}}  	
+		child{node [main node, label=180:$C_5$] (5) {$s_0 \vdash AX A(pVq)$}		
+			child{node [main node, label=180:$C_6$] (6) {$s_1 \vdash A(pVq)$}
+				child {node [eva, label=180:$C_7$] (7) {$s_1 \vdash q \wedge (p \vee AX A(pVq))$}
+					child{node [eva, label=180:$C_8$] (8) {$s_1 \vdash q$}}
+					child{node [eva, label=180:$C_9$] (9) {$ s_1 \vdash p \vee AX A(pVq)$}
+						child{node [eva,label=180:$C_{10}$] (10) {$s_1 \vdash p$}}  	
+						child{node [main node, label=180:$C_{11}$] (11) {$s_1 \vdash AX A(pVq)$}}						
+					}
+				}
+			}			
+		}  	
+  	}
+  }
+;
+
+\draw (5) to[right, out=30,in=0] (0);
+\draw (11) to[out=30,in=0] (0);
+
+%\node (s0) [circle,draw,fill=blue!18,left of=7,xshift=-4cm,label=110:$s_0$] {$\neg p$\\$q$};
+%\node (s1) [circle,draw,fill=blue!18,below of=s0,label=110:$s_1$] {$\neg p$\\$\neg q$};
+%
+%\draw (s0) to (s1);
+%\draw (s0) to[loop above] (s1);
+%\draw (s1) to[bend right] (s0);
+%
+%\node[fit={(s1) ($(s0.north)+(0,1cm)$) ($(s0.north)+(-1cm,0)$)},label=110:M:] {};
+
+%\node (s0) [circle,draw,fill=blue!18,left of=7,xshift=-6.5cm,label=110:$s_0$] {$\neg p$\\$q$};
+\node (s0) [circle,draw,fill=blue!18,left of=7,xshift=-9cm,yshift=6cm,label=110:$s_0$] {$\neg p$\\$q$};
+\node (s1) [circle,draw,fill=blue!18,below of=s0,label=110:$s_1$] {$\neg p$\\$\neg q$};
+
+\draw (s0) to (s1);
+\draw (s0) to[loop above] (s1);
+\draw (s1) to[bend right] (s0);
+
+\node[draw,dashed,fit={(s1) ($(s0.north west)+(-1cm,1cm)$) ($(s0.south east)+(1cm,-3cm)$)},label=110:M:] (fa) {};
+\node[draw=none,rectangle,below of=fa,yshift=-1cm] {(a)};
+
+\node [draw,dashed, rectangle,fit={ ($(s0.north west)+(3cm,1cm)$) ($(11.south east)+(1cm,-1cm)$)}, label=270:(b)] {};
+
+;
+\end{tikzpicture}
+}
+\end{center}
+
+\centering \caption[Arena do jogo (b) para uma estrutura de Kripke M (a)]{ Arena do jogo (b) para uma estrutura de Kripke M (a) e fórmula $\varphi = A(pVq)$ \\ \centering Fonte. Adaptada de \citeonline[p. 11]{grumbergalg}}.
+\label{fig:arena1}
+\end{figure}
+
+As arestas que partem das configurações do tipo $\mbox{AX e EX}$ refletem as transições de uma estrutura de Kripke $M$ utilizada na verificação de modelos. A figura \ref{fig:arena1} apresenta uma arena para uma fórmula $\varphi=A(\mbox{p V q})$ e uma estrutura de Kripke $M$ presente na mesma figura. A fim de evitar uma quantidade desnecessária de parênteses e garantir uma melhor legibilidade das configurações, adotaremos nas figuras a notação utilizada pelos autores em \cite{aline}. Cada configuração $C_i = (s_j,\psi)$, onde $i,j \in \mathbb{N}$ é representada na figura como $s_j \vdash \psi$.
+O modelo $M$ apresenta a estrutura de Krikpe utilizada na construção do grafo do jogo. A configuração $C_0$ é do tipo $A(\mbox{p V q})$, e por isso aplica-se à regra (8) gerando a configuração $C_1$. Esta última é do tipo $\varphi_1 \wedge \varphi_2$, assim aplica-se a regra (4), gerando dois estados ($C_2$ e $C_3$). $C_2$ é um estado terminal, logo, mais nenhuma configuração pode ser gerada. Tomemos, agora, a configuração $C_5$, do tipo $AX A \varphi_1$. Como dito anteriormente, neste tipo de configuração as arestas devem refletir as transições do modelo. Olhando para o mesmo, podemos observar que existem duas transições que partem do estado $s_0$ ($s_0 \to s_0$ e $s_0 \to s_1$). Assim, duas transições partem de $C_5$: $C_5 \to C_0$, refletindo a transição $s_0 \to s_0$; e $C_5 \to C_6$, refletindo a transição $s_0 \to s_1$. %Neste caso, as arestas incidem sobre as configurações anotadas com as fórmulas $\varphi$, no caso de $C_5$, a fórmula $A(\mbox{p V q})$. Perceba também, que $C_0$ é uma configuração do estado $s_0$ e a nova configuração gerada $C_6$ é uma configuração do estado $s_1$.
+
+
+A arena pode ser dividida em suas componentes fortemente conexas maximais. 
+
+
+\begin{defi}\label{def:CFCM}
+\textnormal{
+Uma componente fortemente conexa maximal (CFCM)\sigla{CFCM}{Componente Fortemente Conexa Maximal} de um gráfico direcionado $G = (V,E)$, é um  subgrafo $G' = (V',E')$, tal que para todo par de vértices $v_1$ e $v_2$ em $V$, existe um caminho de $u$ para $v$ e vice-versa. O conjunto $V'$ é maximal.
+}
+\end{defi}
+
+\begin{lemma}\label{lem:CFC}
+\textnormal{
+\cite{grumbergalg} Seja $\beta$ um conjunto de componentes fortemente conexos maximais, com pelo menos uma aresta do grafo do jogo, então o conjunto de fórmulas associadas ao conjunto de nós em $\beta$ é exatamente um dos conjuntos $exp(\varphi)$, onde $\varphi\in \{ A(\varphi_1 U \varphi_2), E(\varphi_1 U \varphi_2), A(\varphi_1 V \varphi_2), E(\varphi_1 V \varphi_2)\}$.
+}
+\end{lemma}
+
+A fórmula $\varphi$ da qual trata o lema \ref{lem:CFC} é a testemunha da CFCM que pode levar a uma jogada infinita. Esta testemunha é única para cada CFCM. A figura \ref{fig:arena1} tem exatamente cinco CFCMs: $F_1=\{C_2\}, F_2=\{C_4\}, F_3=\{C_8\}, F_4=\{C_10\}$ e $F_5 = \{ C_0, C_1, C_3, C_5, C_6, C_7,C_9, C_{11}\}$. Esta informação é utilizada pelo algoritmo de verificação de modelos com jogos para colorir o grafo do jogo e decidir o vencedor.
+
+\subsection{Algoritmo para a Verificação de Modelos com Jogos}\label{sec:alg2valores}
+
+O algoritmo de verificação de modelos com jogos consiste em colorir cada configuração da arena do jogo com uma das seguintes cores: $\top$ se Eva ($\exists$) tem estratégia de ganhar ou $F$ se Abelardo ($\forall$) tem estratégia de ganhar. O algoritmo particiona o grafo do jogo em suas CFCMs e as colore, de forma ascendente, baseado na relação de ordem parcial $\leq$ definida sobre as CFCMs do grafo do jogo. 
+
+\begin{defi}\label{def:leq}
+\textnormal {
+\cite{grumbergalg} Seja $Q_i$ e $Q_j$ CFCMs quaisquer do grafo do jogo, $\leq$ é uma relação de ordem parcial definida sobre as CFCMs do grafo do jogo, tal que uma aresta $(n,n')$, onde $n \in Q_i$ e $n' \in Q_j$, existe se e somente se $Q_i \leq Q_j$. Esta relação de ordem parcial ocorre na arena do jogo, pois as CFCMs do mesmo formam um grafo direcionado acíclico.
+}
+\end{defi}
+
+Cada CFCM $Q_i$ é colorida da seguinte forma:
+
+\begin{enumerate}[label=(\arabic*),noitemsep]
+	\item Configurações terminais $C_j$ em $Q_i$ são coloridas com $\top$ se Eva ($\exists$) tem estratégia de ganhar em $C_j$; ($F$) caso Abelardo ($\forall$) tenha estratégia de ganhar em $C_j$.
+	\item Configurações $C_j=(s,\varphi)$ em $Q_i$, onde $\varphi$ tem forma $\varphi_1 \vee \varphi_2$ ou $EX \varphi_1$, são coloridas com $\top$ se existe um filho colorido com $\top$; $F$ caso contrário.
+	\item Configurações $C_j=(s,\varphi)$ em $Q_i$, onde $\varphi$ tem forma $\varphi_1 \wedge \varphi_2$ ou $AX \varphi_1$, são coloridas com $F$ se existe um filho colorido com $F$; $\top$ caso contrário.
+	\item Configurações  em $Q_i$, que após a aplicação sucessiva das regras (1) a (3) ainda permanecem sem ser coloridas, serão coloridas, de acordo com a testemunha em $Q_i$: $F$ se a testemunha for da forma $AU$ ou $EU$; $\top$ se a testemunha for da forma $AV$ ou $EV$. 
+\end{enumerate}
+
+
+
+Segundo \cite{grumbergalg}, a aplicação do algoritmo sobre uma arena $G$ resulta em uma função $\chi : N \to \{T,F\}$, onde $N$ é o conjunto das configurações em $G$. $\chi$ informa a cor atribuída a uma configuração $C_i \in N$ do grafo do jogo. Os teoremas a seguir podem ser encontrados em \cite{stirling} e \cite{grumbergalg}.
+
+\begin{teorema}\label{teo:md1}
+\textnormal{
+Seja $\chi $ a função de coloração resultante após a aplicação do algoritmo sobre uma arena e $C_i$ uma configuração qualquer da mesma. Então:
+\begin{enumerate}[label=(\arabic*),noitemsep]
+	\item $\chi(C_i)=\top$ se e somente se Eva ($\exists$) tem estratégia de ganhar para todas as jogadas a partir da configuração $C_i$.
+	\item $\chi(C_i)=F$ se e somente se Abelardo ($\forall$) tem estratégia de ganhar para todas as jogadas a partir da configuração $C_i$.
+\end{enumerate}  
+}
+\end{teorema}
+
+\begin{teorema}\label{teo:md2}
+\textnormal{
+Seja $M$ uma estrutura de Kripke e $\psi$ uma fórmula CTL. Então, para toda configuração $C_i=(s,\varphi)$ da arena deste jogo, onde $\varphi \in sub(\psi)$, tem-se que:
+\begin{enumerate}[label=(\arabic*),noitemsep]
+	\item $M,s \models \varphi = \top$ se e somente se $C_i$ for colorido com $\top$, ou seja, se e somente se Eva ($\exists$) tem estratégia de ganhar começando em $C_i$. 
+	\item $M,s \models \varphi = F$ se e somente se $C_i$ for colorido com $F$, ou seja, se e somente se Abelardo ($\forall$) tem estratégia de ganhar começando em $C_i$.
+\end{enumerate}
+}
+\end{teorema}
+
+De acordo com os teoremas \ref{teo:md1} e \ref{teo:md2}, pode-se concluir que dada uma estrutura de Kripke $M$, um estado inicial $s_0$ desta estrutura e uma fórmula $\psi$ da CTL, a verificação de modelos $(M,s_0 \models \psi) = \top$ se $\chi(C_i)=\top$, com $C_i=(s_0,\psi)$, estiver colorida com $\top$; e $(M,s_0 \models \psi)= F$, caso contrário. \cite{grumbergalg}.
+%Seja $\chi : N \to \{T,F\}$, onde $N$ é um configuração qualquer do grafo $G$ do jogo, a função de coloração obtida após a aplicação do algoritmo sobre $G$, então:
+
+\subsection{Exemplo de Verificação de Modelos com Jogos}
+
+O algoritmo de verificação de modelos com jogos pode ser aplicado sobre a arena do jogo da figura \ref{fig:arena1}, obtendo-se como resultado a arena colorida da figura \ref{fig:arena1colorida}.
+
+
+\begin{figure}[htb]
+\begin{center}
+\resizebox{!}{8.5cm}{%
+\tikzset {main node/.style = {rectangle, draw, fill=blue!18, align=center},
+eva/.style = {ellipse, draw, fill=blue!18, align=center},
+any/.style={draw,shape=rectangle}
+}
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, level/.style={rectangle,draw, fill=blue!18,draw,font=\sffamily\small\bfseries,sibling distance = 5cm,
+  level 2/.style={sibling distance=6cm},
+    level 3/.style={sibling distance=6cm},
+    level 6/.style={sibling distance=6cm},
+%       level 7/.style={sibling distance=6cm},
+  level distance = 1.4cm}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+\node [eva, label = 180:$C_0$] (0){$s_0 \vdash A(pVq)$  $(F)$}
+  child {node [main node, label=180:$C_1$] (1) {$s_0 \vdash q \wedge (p \vee AX A(pVq))$  $(F)$}
+  	child{node [eva, label=180:$C_2$] (2) {$s_0 \vdash q$  $(\top)$}
+  	}
+  	child{node [eva, label=180:$C_3$] (3) {$ s_0 \vdash p \vee AX A(pVq)$ $(F)$}
+  		child{node [eva,label=180:$C_4$] (4) {$s_0 \vdash p$ $(F)$}}  	
+		child{node [main node, label=180:$C_5$] (5) {$s_0 \vdash AX A(pVq)$ $(F)$}		
+			child{node [main node, label=180:$C_6$] (6) {$s_1 \vdash A(pVq)$ $(F)$}
+				child {node [eva, label=180:$C_7$] (7) {$s_1 \vdash q \wedge (p \vee AX A(pVq))$ $(F)$}
+					child{node [eva, label=180:$C_8$] (8) {$s_1 \vdash q$ $(F)$}}
+					child{node [eva, label=180:$C_9$] (9) {$ s_1 \vdash p \vee AX A(pVq)$ $(F)$ }
+						child{node [eva,label=180:$C_{10}$] (10) {$s_1 \vdash p$ $(F)$}}  	
+						child{node [main node, label=180:$C_{11}$] (11) {$s_1 \vdash AX A(pVq)$ $(F)$}}						
+					}
+				}
+			}			
+		}  	
+  	}
+  }
+;
+
+
+
+\def\pathone{ ($(1.north west)+(0,2cm)+(-0.8cm,0)$) to ($(1.south west)+(-0.8cm,-0.25cm)$) to ($(1.south east)+(-3cm,-0.25cm)$)
+to ($(1.south east)+(-3cm,-1.65cm)$) to ($(1.south east)+(-3cm,-1.65cm)+(2.5cm,0)$) to ($(1.south east)+(-3cm,-1.65cm)+(2.5cm,-4.25cm)$) to
+($(1.south east)+(-3cm,-1.65cm)+(2.5cm,-4.25cm)+(3cm,0)$)
+to ($(1.south east)+(-3cm,-1.65cm)+(2.5cm,-4.25cm)+(3cm,-1.35cm)$)
+to ($(1.south east)+(-3cm,-1.65cm)+(2.5cm,-4.25cm)+(3cm,-1.35cm)+(4cm,0)$)
+to ($(1.south east)+(-3cm,-1.65cm)+(2.5cm,-4.25cm)+(3cm,-1.35cm)+(4cm,-2cm)$)
+to ($(1.south east)+(-3cm,-1.65cm)+(2.5cm,-4.25cm)+(3cm,-1.35cm)+(4cm,-2cm)+(6cm,0)$)};
+\def\pathtwo{($(1.south east)+(-3cm,-1.65cm)+(7cm,0)+(0,4.25cm)+(8.45cm,0)$)}
+\draw \pathone --  \pathtwo -- cycle;%-- \pathtwo -- cycle;
+
+\node [rectangle,xshift=-1.3cm,yshift=0.5cm, left of=0](F5) {$F_5$};
+
+\node [draw,rectangle,fit={(2) ($(2.west)+(-0.7cm,0)$)},label=180:$F_4$] (F4){};
+\node [draw,rectangle,fit={(4) ($(4.west)+(-0.7cm,0)$)},label=180:$F_3$] (F3){};
+\node [draw,rectangle,fit={(8) ($(8.west)+(-0.7cm,0)$)},label=180:$F_2$] (F2){};
+\node [draw,rectangle,fit={(10) ($(10.west)+(-0.7cm,0)$)},label=180:$F_1$] (F1){};
+
+%\begin{scope}[xshift=5cm]
+
+\draw (5) to[right, out=30,in=0] (0);
+\draw (11) to[out=30,in=0] (0);
+
+%\node (s0) [circle,draw,fill=blue!18,left of=7,xshift=-6.5cm,label=110:$s_0$] {$\neg p$\\$q$};
+\node (s0) [circle,draw,fill=blue!18,left of=7,xshift=-12cm,yshift=6cm,label=110:$s_0$] {$\neg p$\\$q$};
+\node (s1) [circle,draw,fill=blue!18,below of=s0,label=110:$s_1$] {$\neg p$\\$\neg q$};
+
+\draw (s0) to (s1);
+\draw (s0) to[loop above] (s1);
+\draw (s1) to[bend right] (s0);
+
+\node[draw,dashed,fit={(s1) ($(s0.north west)+(-1cm,2cm)$) ($(s0.south east)+(1cm,-3cm)$)},label=110:M:] (fa) {};
+\node[draw=none,rectangle,below of=fa,yshift=-1cm] {(a)};
+
+\node [draw,dashed, rectangle,fit={ (F1) (F2) (F3) (F4) (11) (0) ($(s0.north west)+(3cm,2cm)$) ($(11.south east)+(2cm,-1cm)$)}, label=270:(b)] {};
+
+%\end{scope}
+
+;
+
+
+%\node [any] (n1) {N1};
+%\node [any,right of=n1] (n2) {N2};
+%\node [any,above of=n2] (n3) {N3};
+%
+%\node[fit=(n1) (n2)] (n12) {};
+%\node[fit=(n2) (n3)] (n23) {};
+%
+%\draw (n12.north west) -- (n12.north west-| n23.west) -- (n23.north west) 
+% -- (n23.north east) -- (n23.south east) -- (n12.south west) -- cycle;
+%%
+
+
+
+\end{tikzpicture}
+}
+\end{center}
+
+ \caption[Arena do jogo colorida]{ Arena do jogo (b) para uma estrutura de Kripke M (a) e fórmula $\varphi = A(pVq)$. As configurações são coloridas com ($F$) ou ($\top$) e a arena particionada em suas CFCMs identificadas por $F_i$, com $i \in  \mathbb{N}^*$ .  \\Fonte. Adaptada de \citeonline[p. 11]{grumbergalg}.}
+\label{fig:arena1colorida}
+\end{figure}
+
+Na figura \ref{fig:arena1colorida} cada configuração é colorida com ($F$) ou ($\top$). A arena é particionada em suas CFCMs e  rotuladas por $F_i$, com $i \in \mathbb{N}^*$, que indica a ordem de coloração de cada uma. Assim, o algoritmo colore primeiro a CFCM $F_1$ que tem uma configuração terminal $C_{10}=(s_1,p)$, o átomo $p$ não vale no estado $s_1$ de $M$, assim, de acordo com a regra (1) do algoritmo esta configuração deve ser colorida com ($F$). O mesmo ocorre para as CFCMs $F_2,F_3$ e $F_4$, esta última diferente das anteriores é colorida com ($\top$), visto que o átomo $q$ vale no estado $s_0$ do modelo $M$. A CFCM $F_5$ é a última a ser colorida. Nesta CFCM, aplica-se  as regras  (2) e (3) do algoritmo. $C_7$ é colorida com ($F$), pois ela é da forma $\varphi_1 \wedge \varphi_2$ e tem um filho ($C_8$) colorido com ($F$), obedecendo a regra de coloração (3) do algoritmo. Esta coloração se propaga para cima colorindo todos os outros nós com ($F$). Ao final, $C_0$ é colorido com $F$, assim $(M,s_0 \models A(pVq))=F$.
+%Quanto às outras regras elas se justificam da seguinte maneira. Em cada configuração, somente um movimento pode ser feito; vale lembrar que Eva sempre tenta provar a validade da fórmula enquanto Abelardo busca falsificá-la. Somente um movimento pode ser feito em cada configuração $C_i$, salvo as configurações finais. Assim, para a sub-fórmula $\varphi$ do tipo $\varphi_1 \vee \varphi_2$, é suficiente escolher apenas uma das configurações  $\varphi_j$,  com $j \in \{1,2\}$, de modo a alcançar uma jogada que tenha valor verdadeiro.  Por outro lado, para falsificar uma sub-fórmula do tipo $\varphi_1 \wedge \varphi_2$, é suficiente falsificar apenas uma das configurações com
+
+
+%Os algoritmos de verificação de modelos não precisam considerar todos os conectivos da lógica, mas apenas uma base de conectivos da mesma. Para este algoritmo, a fórmula CTL $\varphi$ deve estar em sua forma normal negativa, como definida abaixo:
+
+\section{Verificação de Modelos com Jogos para Lógica de 3 Valores }\label{sec:modelchecking3valores}
+
+O algoritmo de verificação de modelos para lógica de três valores recebe como entrada um modelo KMTS $M$, um estado inicial $s_0$ deste modelo, uma fórmula $\psi$ e decide se $M,s_0 \models \psi$. O jogo continua a ser disputado por Eva ($\exists$) e Abelardo ($\forall$) que tentam, respectivamente, provar a validade da fórmula e refutá-la. No entanto, diferentemente da verificação de modelos da seção anterior, três resultados podem ocorrer:
+
+\begin{enumerate}[label=(\arabic*),noitemsep]
+	\item $\top$, se todos as estruturas de Kripke representadas pelo KMTS $M$ satisfazem a propriedade $\psi$.
+	\item $F$, se todos as estruturas de Kripke representadas pelo KMTS $M$ não satisfazem a propriedade $\psi$.
+	\item $\perp$, se $\psi$ é uma fórmula satisfazível e existem estruturas de Kripke representadas pelo KMTS $M$ que satisfazem $\psi$ e outras estruturas que não a satisfazem. Ou ainda, se a fórmula $\psi$ for insatisfazível.
+\end{enumerate}
+
+%Neste trabalho, estamos interessados em realizar o refinamento do modelo KMTS quanto este resulta em indefinido na verificação de modelos. O trabalho de refinamento de modelos KMTS proposto por \cite{aline} realiza o refinamento dos mesmos sobre uma arena gerada sobre a 
+
+KMTS são modelos de $\mu$-calculus e as especificações das propriedades sobre estes modelos são especificadas utilizando a mesma. A definição abaixo apresenta a sintaxe de $\mu$-calculus em sua forma normal negativa. \cite{clarke} 
+
+\begin{defi}
+\textnormal{ \cite{clarke} Seja $AP$ um conjunto de proposições atômicas e $V$ um conjunto de variáveis proposicionais. O conjunto de literais sobre $AP$ é definido como $Lit = AP \cup \{ \neg p | p \in AP \}$. O $\mu$-calculus em sua forma normal negativa sobre $AP$ é definida por  $\varphi ::= \; l \; | \;  Z \; | \; \varphi \vee\varphi \; | \; \varphi \wedge \varphi \; | \; \langle a \rangle X \varphi \; | \; \left[ a \right] X \varphi \; | \; \mu Z.\varphi \; | \; \nu Z.\varphi $ onde  $l \in Lit$ e $Z \in V $. $[a]X$ significa para todos os sucessores alcançáveis através de uma aresta com rótulo ``a'' e $\langle a \rangle X$ significa existe um sucessor alcançável através de uma aresta com rótulo ``a''. $\mu$ denota o menor ponto fixo e  $\nu$ denota o maior ponto fixo. Uma fórmula $\varphi$ é fechada se todas as suas variáveis $Z$ são limitadas por um operador de ponto fixo $\mu$ ou $\nu$.
+}
+\end{defi}
+
+Para o $\mu$-calculos completo, as arestas do KMTS representam ações que ocorrem no sistema. No entanto como estamos interessados somente em propriedades especificadas em CTL e, também, ao tratarmos um KMTS como uma estrutura que compacta diversos modelos CTL, não precisamos considerar esses rótulos. Desta forma, é suficiente considerar os conectivos $\langle a \rangle X$ e $[a]X$ por $EX$ e $AX$, respectivamente.
+Fórmulas CTL podem ser especificadas em $\mu$-calculus pelas seguintes equivalências:$EF\phi \equiv \mu Z.\phi \vee EXZ$; $AF\phi \equiv \mu Z.\phi \vee AXZ$; $EG\phi \equiv \upsilon Z. \phi \wedge EXZ;$ $AG\phi \equiv \upsilon Z. \phi \wedge AXZ;$ $E[{\phi}U{\phi}] \equiv \mu Z.\phi \vee (\phi \wedge EXZ)$; $\mbox{ e } A[{\phi}U{\phi}] \equiv \mu Z.\phi \vee (\phi \wedge AXZ)$. \cite{clarke}
+
+Assim como no algoritmo da seção anterior, a verificação de modelos para lógica de três valores com jogos constrói primeiramente uma arena, que será colorida posteriormente, baseado nas regras do jogo e nas estratégias dos jogadores. Dado um KMTS $M$ e uma fórmula $\psi$, a arena para este jogo é construída decompondo-se a fórmula $\psi$ em suas sub-fórmulas e combinando-as com os estados do modelo $M$, considerando-se as regras do jogo apresentadas na figura \ref{fig:regras3valores}.
+
+\begin{figure}[htb]
+\begin{center}
+%\resizebox{!}{3.5cm}{%
+ \begin{tikzpicture}[framed,->,shorten >=2pt,auto,node distance=3cm,align=center,
+  thick, every node/.style={rectangle,fill=none,draw=none,minimum size=2.5em, font=\sffamily\normalsize\bfseries,align=left}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+  \node (0) { \textnormal{Regras para Eva ($\exists$):}  \\ 
+	\\
+	\textnormal{(1)} $\frac{s \mbox{ } \vdash \mbox{ } \psi_0 \mbox{ } \vee \mbox{ } \psi_1}{s \mbox{ } \vdash \mbox{ } \psi_i}:i \in \{ 0,1\}$ 
+	 \hspace{3em}
+	 \textnormal{(2)} $\frac{s \mbox{ } \vdash \mbox{ } EX \psi}{t \mbox{ } \vdash \mbox{ } \psi}:R^+(s,t) \mbox{ \textnormal{ou} } R^-(s,t)$ \\ \\
+	\textnormal{(3)} $\frac{s \mbox{ } \vdash \mbox{ } \eta Z.\psi}{s \mbox{ } \vdash \mbox{ } Z}:\eta \in \{ \upsilon, \mu \}$
+	 \hspace{3.3em} 
+	\textnormal{(4)} $\frac{s \mbox{ } \vdash \mbox{ } Z}{s \mbox{ } \vdash \mbox{ } \psi}$
+	 \\
+	 \\
+	 \textnormal{Regras para Abelardo ($\forall$):}
+	 \\ \\
+	 \textnormal{(5)} $\frac{s \mbox{ } \vdash \mbox{ } \psi_0 \mbox{ } \wedge \mbox{ } \psi_1}{s \mbox{ } \vdash \mbox{ } \psi_i}:i \in \{ 0,1\}$ 
+	 \hspace{2.5em}
+	\textnormal{(6)} $\frac{s \mbox{ } \vdash \mbox{ } AX \psi}{t \vdash \psi}:R^+(s,t) \mbox{ \textnormal{ou} } R^-(s,t)$
+	 
+	 
+  };
+;
+
+\end{tikzpicture}
+%}
+\end{center}
+\caption[Regras do jogo com lógica de três valores]{ Regras do jogo com lógica de três valores. \\ Fonte. Adaptado de \cite{grumberglosing}}
+\label{fig:regras3valores}
+\end{figure}
+
+As regras do jogo definem os movimentos possíveis em cada configuração, e qual o jogador responsável por realizar o movimento na mesma. Na figura \ref{fig:regras3valores}, cada configuração $C_i=(s,\psi)$ do grafo do jogo é representada por $s \vdash \psi$. A parte superior de cada regra indica a forma da configuração do jogador a qual a regra deve ser aplicada, enquanto a parte inferior indica as configurações atingíveis a partir dela. As regras (2) e (6) refletem as transições do KMTS. As regras definidas nesta figura foram adaptadas do original, para lidar, somente, com fórmulas CTL, uma vez que estamos interessados somente em propriedades especificadas nesta lógica. A proposta de verificação de modelos para o $\mu$-calculus completo pode ser encontrada em \cite{grumberglosing}.
+
+O jogo inicia-se na configuração inicial $C_0=(s_0,\psi)$ e cada jogador faz o seu movimento de acordo com a sua estratégia, até que o jogo acabe (alcançar configuração terminal ou jogar infinitamente frequentemente). Uma jogada é infinita, somente se uma variável $Z$ ligada a um ponto fixo ocorrer. Esta variável é chamada de testemunha. 
+
+%Com a introdução de indeterminações pelo KMTS (transições \textit{may} e proposições atômicas indefinidas), novas estratégias para os jogadores devem ser consideradas. Pois, 
+Uma transição \textit{may} de um KMTS representa a presença da mesma em um modelo e ausência em outro. Assim sendo, se Eva ($\exists$), por exemplo, joga  de uma transição $C_i = (s,EX  \psi)$ para uma configuração $C_{i+1}=(s_j,\psi_1)$ por uma transição \textit{may}, com $C_{i+1}$ colorida com $\top$, então $C_i$ não será colorida com $\top$, mas como $\perp$, uma vez que a transição \textit{may} do KMTS indica a presença da mesma em um modelo e ausência em outro. Logo, existem modelos onde Eva ($\exists$) ganha ao jogar pela transição $C_i \to C_{i+1}$ e outros onde ela não ganha. Desta forma, as estratégias dos jogadores devem ser diferentes das do jogo da seção \ref{sec:modelcheckingjogos}.
+
+Considerando as regras (2) e (6) da figura \ref{fig:regras3valores} que refletem as transições do modelo KMTS, os jogadores podem optar por jogar por transições \textit{must} e \textit{may}. Eva e Abelardo devem escolher jogar por transições \textit{must} se desejarem ganhar o jogo, ou seja, provar a validade da fórmula ou refutar a mesma, respectivamente. Pois, ao fazerem isso, garantem que a jogada ocorre em todos os modelos representados por tal transição. No entanto, podem jogar por uma transição \textit{may} se quiserem evitar perder o jogo. Ou seja, existem modelos onde o jogador ganha por esta transição e outros não. Assim, se um jogador deseja vencer, deverá jogar consistentemente, isto é, apenas por transições \textit{must}. No entanto, poderá jogar por uma transição \textit{may} se quiser evitar perder. Estas jogadas são válidas somente se a fórmula tomada para a construção da arena do jogo for satisfazível, caso contrário, ainda que a fórmula seja insatisfazível, o jogo poderá resultar em indefinido.
+
+\begin{defi}
+\textnormal{ \cite{grumbergalg} Uma jogada é consistente se em cada configuração da forma $C_i=(s,EX \varphi)$ e $C_i=(s,AX \varphi)$, respectivamente, Eva ($\exists$) e Abelardo ($\forall$) jogarem por transições \textit{must}.
+}
+\end{defi}
+
+As estratégias de ganhar de acordo com \cite{grumbergalg} e \cite{grumberglosing} são apresentadas a seguir.
+
+Abelardo ($\forall$) tem estratégia de ganhar, se jogar sempre consistentemente e uma das seguintes condições ocorrer:
+
+\begin{enumerate}[label=(\arabic*),noitemsep]
+	\item A jogada é finita e termina em uma configuração terminal da forma $C_i=(s,false)$ ou $C_i=(s,l)$; onde $\neg l \in L(s)$.
+	\item joga infinitamente frequentemente e a testemunha é uma variável de menor ponto fixo.
+\end{enumerate}
+
+Eva ($\exists$) tem estratégia de ganhar, se jogar sempre consistentemente e uma das seguintes condições ocorrer:
+
+\begin{enumerate}[label=(\arabic*),noitemsep]
+	\item A jogada é finita e termina em uma configuração terminal da forma $C_i=(s,true)$ ou $C_i=(s,l)$; onde $ l \in L(s)$.
+	\item joga infinitamente frequentemente e a testemunha é uma variável de maior ponto fixo.
+\end{enumerate}
+
+Para qualquer outro caso, o jogo termina em empate, ou seja, a configuração inicial $C_0$ é colorida com $\perp$. O que indica que ambos jogadores tem estratégia de não perder. 
+%
+\begin{teorema}
+\textnormal{
+Adaptado de \cite{grumbergalg}. Seja $M$ um KMTS qualquer e $\psi$ uma fórmula qualquer da CTL expressa em $\mu$-calculus. Então, para cada configuração $s \in S$, da arena do jogo, onde $S$ é o conjunto de estados de $M$:
+\begin{enumerate}[label=(\arabic*),noitemsep]
+	\item $ M,s \models \psi = \top$ se e somente se Eva $(\exists)$ tem estratégia de ganhar começando em $s$
+	\item $ M,s \models \psi = F$ se e somente se Abelardo $(\forall)$ tem estratégia de ganhar começando em $s$
+	\item $ M,s \models \psi = \perp$ se e somente se nenhum dos dois jogadores tem estratégia de ganhar começando em $s$, ou seja, ambos tem estratégia de não perder começando em $s$.
+\end{enumerate}
+}
+\end{teorema}
+
+\begin{teorema}
+\textnormal{  
+\cite{grumbergalg}. Seja $\chi $ a função de coloração resultante após a aplicação do algoritmo sobre uma arena e $C_i$ uma configuração qualquer da mesma. Então: 
+\begin{enumerate}[label=(\arabic*),noitemsep]
+	\item $\chi(C_i) = \top$ se e somente se Eva $(\exists)$ tem estratégia de ganhar começando em $C_i$.
+	\item $\chi(C_i) = F$ se e somente se Abelardo $(\forall)$ tem estratégia de ganhar começando em $C_i$
+	\item $\chi(C_i) = \perp$ se e somente se nenhum dos jogadores tem estratégia de ganhar começando em $C_i$, ou seja, ambos os jogadores tem estratégia de não perder a partir de $C_i$.
+\end{enumerate}
+}
+\end{teorema}
+
+\subsection{Algoritmo de Coloração}
+
+Apresentamos nesta seção o algoritmo de coloração para a verificação de modelos com jogos para lógica de três valores proposto em \cite{grumbergalg}. O algoritmo aqui apresentado é uma adaptação do original, para trabalhar sobre a arena gerada sobre as regras do jogo da figura \ref{fig:regras3valores}, visto que estamos interessados somente em propriedades especificadas em CTL sobre modelos KMTS. 
+
+Para o algoritmo de coloração, consideramos dois tipos configurações. Uma configuração é dita configuração \textit{may} ou nó \textit{may} se for filha de uma outra configuração e a aresta que os conecta for do tipo \textit{may}. Todas as outras configurações serão chamadas de configuração \textit{must} ou nó \textit{must}.
+
+O algoritmo particiona a arena em suas CFCMs (definição \ref{def:CFCM}) e as colore de forma ascendente com respeito a relação de ordem parcial $\leq$ (definição \ref{def:leq}). Cada CFCM $F_i$ é colorida em duas fases, como segue:
+
+\begin{description}
+	\item \textit{1ª Fase:} Coloração dos nós filhos\\
+	As regras a seguir são aplicadas a todas configurações em $F_i$ até que mais nenhuma possa ser aplicada. 
+	\begin{enumerate}[label=(\arabic*)]
+		\item Configurações terminais são coloridas com $\top$ se Eva ($\exists$) tem estratégia de ganhar, com $F$ se Abelardo ($\forall$) tem estratégia de ganhar e com $\perp$ caso contrário.
+		\item Configurações da forma $AX \varphi$ são coloridas da seguinte forma:
+		\begin{description}
+			\item $\top$ se todos os nós filhos (\textit{may} ou \textit{must}) estiverem coloridos com $\top$.
+			\item $F$ se existe um nó filho \textit{may} colorido com $F$.
+			\item $\perp$ se todos os filhos \textit{must} estiverem coloridos com $\top$ ou $\perp$; e existe um filho \textit{may} colorido com $F$ ou  $\perp$.
+		\end{description}
+		\item Configurações da forma $EX \varphi$ são coloridas da seguinte forma:
+			\begin{description}
+				\item $\top$ se existe um filho \textit{must} colorido com $\top$
+				\item $F$ se todos os filhos (\textit{may} ou \textit{must}) estiverem coloridos com $F$.
+				\item $\perp$ se existe um filho \textit{may} colorido com $\perp$ ou $\top$ e todos os filhos \textit{must} estiverem coloridos com $F$ ou $\perp$.
+			\end{description}
+			\item Configurações da forma $\varphi_1 \wedge \varphi_2$ são coloridas da seguinte forma:
+			\begin{description}
+				\item $\top$ se ambos os filhos estiverem coloridos com $\top$
+				\item $F$ se um dos filhos estiver colorido com $F$.
+				\item $\perp$ se um dos filhos estiver colorido com $\top$ ou $\perp$ e o outro estiver colorido com $\perp$.
+			\end{description}
+			\item Configurações da forma $\varphi_1 \vee \varphi_2$ são coloridas da seguinte forma:
+			\begin{description}
+				\item $\top$ se existe um filho colorido com $\top$.
+				\item $F$ se ambos os filhos estiverem coloridos com $F$.
+				\item $\perp$ se um dos filhos estiver colorido com $\perp$ ou $F$ e o outro estiver colorido com $\perp$.
+			\end{description}
+	\end{enumerate}
+	
+	\item \textit{2ª Fase:} Coloração das testemunhas \\
+	Se após a propagação das regras da 1ª fase, ainda existirem nós na CFCM $F_i$ sem estarem coloridos, então os jogadores jogam infinitamente frequentemente em $F_i$ e a testemunha ou é uma variável de maior ponto fixo ou de menor ponto fixo. Desta forma, os nós remanescentes serão coloridos, em duas fases, de acordo com a testemunha, como segue:
+	\begin{enumerate}[label=(\arabic*),noitemsep]
+		\item Testemunha de menor ponto fixo $\mu$: 
+		\begin{enumerate}
+			\item Colorir sucessivamente com $\perp$ cada configuração em $F_i$ que obedeça uma das seguintes condições até que nenhuma delas possa mais ser aplicada:
+			\begin{description}
+				\item Nós da forma $AX \varphi$ com todos os filhos \textit{must} coloridos com $\top$ ou $\perp$.
+				\item Nós da forma $\varphi_1 \wedge \varphi_2$ com ambos os filhos coloridos com $\top$ ou $\perp$.
+				\item Nós da forma $EX \varphi$ que tem um filho \textit{may} colorido com $\top$ ou $\perp$.
+				\item Nós da forma $\varphi_1 \vee \varphi_2$ com um filho colorido com $\perp$.
+			\end{description}
+			\item Colorir todos os nós remanescentes com $F$
+		\end{enumerate}
+		\item Testemunha de maior ponto fixo $\nu$:
+			\begin{enumerate}
+				\item Colorir sucessivamente com $\perp$ cada configuração em $F_i$ que obedeça uma das seguintes condições até que nenhuma delas possa mais ser aplicada:
+				\begin{description}
+					\item Nós da forma $AX \varphi$ com pelo menos um filho \textit{may} colorido com $F$ ou $\perp$.
+					\item Nós da forma $\varphi_1 \wedge \varphi_2$ com um dos filhos coloridos com $\perp$.
+					\item Nós da forma $EX \varphi$ com todos os filhos \textit{must} colorido com $F$ ou $\perp$.
+				\item Nós da forma $\varphi_1 \vee \varphi_2$ com ambos os filhos coloridos com $F$ ou $\perp$.
+				\end{description}
+				\item Colorir todos os nós remanescentes com $\top$.
+			\end{enumerate}
+	\end{enumerate}
+\end{description}
+
+
+\subsection{Exemplo de Verificação de Modelos com Jogos para Lógica de 3 Valores}
+
+Consideremos, como exemplo, a fórmula CTL $AX ( (AG \neg m) \vee (AF m)) $ equivalente a fórmula $AX ( ( \nu Z. \neg m \wedge AX Z) \vee (\mu Y. m \vee AX Y))$ em $\mu$-calculus. A figura \ref{fig:ex3valores} apresenta a arena do para esta fórmula e um KMTS $M$ apresentado na mesma.
+
+\begin{figure}[htb]
+\begin{center}
+\resizebox{!}{10cm}{%
+\tikzset {main node/.style = {rectangle, solid,draw, fill=blue!18, align=center},
+eva/.style = {ellipse, solid,draw, fill=blue!18, align=center},
+any/.style={draw,shape=rectangle}
+}
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, level/.style={rectangle,draw, fill=blue!18,draw,font=\sffamily\small\bfseries,sibling distance = 4cm,
+  level 2/.style={sibling distance=11cm},
+    level 5/.style={sibling distance=4cm},
+%        level 5/.style={sibling distance=4.2cm},
+%       level 7/.style={sibling distance=6cm},
+  level distance = 1.4cm}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+\node [main node, label = 180:$C_0$] (0){$s_0 \vdash AX ( ( \nu Z. \neg m \wedge AX Z) \vee (\mu Y. m \vee AX Y)) \; (\perp)$ }
+  child {node [eva, label=180:$C_1$] (1) {$s_1 \vdash ( \nu Z. \neg m \wedge AX Z) \vee (\mu Y. m \vee AX Y) \; (\perp)$ } 
+  	child{node [main node, label=180:$C_2$] (2) {$s_1 \vdash \nu Z. \neg m \wedge AX Z \; (\perp)$}
+  	 	child {node [eva, label=180:$C_3$] (3) {$s_1 \vdash Z \; (\perp)$}  	 	
+			child{node [main node, label=180:$C_4$] (4) {$ s_1 \vdash \neg m \wedge AX Z \; (\perp)$} 
+				child{node [eva, label=180:$C_5$,xshift=-4mm] (5) {$ s_1 \vdash \neg m \; (\perp)$} }
+				child{node [main node, label=180:$C_6$] (6) {$ s_1 \vdash  AX Z \; (\perp)$} 
+			child{node [eva, label=180:$C_7$] (7) {$ s_0 \vdash Z \; (F)$} edge from parent [dashed] 
+			child{node [main node, label=180:$C_8$] (8) {$ s_0 \vdash \neg m \wedge AX Z \; (F)$} edge from parent [solid]  
+				child{node [eva, label=180:$C_9$,xshift=-4mm] (9) {$ s_0 \vdash \neg m  \; (F)$} edge from parent [solid] }		
+				child{node [main node, label=180:$C_{10}$,xshift=-4mm] (10) {$ s_0 \vdash AX Z \; (\perp)$} edge from parent [solid] }
+			}			
+			}				
+				}
+			}  	 	
+  	 	}
+  	}
+  	child{node [eva, label=180:$C_{11}$] (11) {$ s_0 \vdash \mu Y. m \vee AX Y \; (\perp)$}  	  						
+  	 	child {node [eva, label=180:$C_{12}$] (12) {$s_1 \vdash Y \; (\perp)$}  	 	
+			child{node [eva, label=180:$C_{13}$] (13) {$ s_1 \vdash m \vee AX Y \; (\perp)$} 
+				child{node [eva, label=180:$C_{14}$,xshift=-2mm] (14) {$ s_1 \vdash  m  \; (\perp)$} }
+				child{node [main node, label=180:$C_{15}$] (15) {$ s_1 \vdash  AX Y \; (\perp)$} 
+			child{node [eva, label=180:$C_{16}$] (16) {$ s_0 \vdash Y \; (\top)$} edge from parent [dashed] 
+			child{node [eva, label=170:$C_{17}$] (17) {$ s_0 \vdash m \vee AX Y \; (\top)$} edge from parent [solid]  
+				child{node [eva, label=180:$C_{18}$] (18) {$ s_0 \vdash m \; (\top)$} edge from parent [solid] }		
+				child{node [main node, label=180:$C_{19}$] (19) {$ s_0 \vdash AX Y \; (\perp)$} edge from parent [solid] }
+			}			
+			}				
+				}
+			}  	 	
+  	 	}
+		}  	
+  	}
+;
+
+\draw (10) to[in=0,out=-30] (3);
+\draw [dashed] (6) to[in=-10,out=0] (3);
+\draw (19) to[in=0,out=-30] (12);
+\draw [dashed] (15) to[in=-10,out=0] (12);
+
+\node [draw,rectangle,fit={(18) ($(18.west)+(-0.7cm,0)$)},label=180:$F_1$] (F1){};
+\node [draw,rectangle,fit={(14) ($(14.west)+(-0.7cm,0)$)},label=180:$F_2$] (F2){};
+\node [draw,rectangle,fit={(5) ($(5.west)+(-0.7cm,0)$)},label=180:$F_4$] (F4){};
+\node [draw,rectangle,fit={(9) ($(9.west)+(-0.7cm,0)$)},label=180:$F_3$] (F3){};
+\node [draw,rectangle,fit={(0) ($(0.west)+(-0.7cm,0)$)},label=180:$F_{10}$] (F10){};
+\node [draw,rectangle,fit={(1) ($(1.west)+(-0.7cm,0)$)},label=180:$F_{9}$] (F10){};
+\node [draw,rectangle,fit={(2) ($(2.west)+(-0.7cm,0)$)},label=180:$F_{8}$] (F10){};
+\node [draw,rectangle,fit={(11) ($(11.west)+(-0.7cm,0)$)},label=180:$F_{7}$] (F10){};
+
+\draw node[fit={(3) ($(4.west)+(-1cm,0)+(0,-5mm)$)},xshift=5mm] (f1) {};
+\draw node [fit={ (6) ($(6.north)+(0,0.35cm)$) (7) (8) ($(8.south west)+(-0.6cm,-0.2cm)$)}] (f2) {};
+\draw node [fit={(10) ($(10.north west)+(-0.75cm,0.3cm)$) ($(10.south east)+(+0.35cm,0)$)}] (f3) {};
+\draw (f1.south west) -- (f2.north west) |- (f2.south west) -- (f3.north west) |- (f3.south west) -- (f3.south east) |- ($(f3.north east)+(0,6.85cm)$) -- (f1.north west) -- cycle;
+
+\draw node[fit={(12) ($(13.west)+(-1.2cm,0)+(0,-5mm)$)},xshift=5mm] (f11) {};
+\draw node [fit={ (15) ($(15.north)+(0,0.35cm)$) (16) (17) ($(17.south west)+(-0.8cm,-0.2cm)$)}] (f12) {};
+\draw node [fit={(19) ($(19.north west)+(-0.75cm,0.3cm)$) ($(19.south east)+(+0.35cm,0)$)}] (f13) {};
+\draw [label=ty](f11.south west) -- (f12.north west) |- (f12.south west) -- (f13.north west) |- (f13.south west) -- (f13.south east) |- ($(f13.north east)+(0,6.85cm)$) -- (f11.north west) -- cycle ;
+
+\node [left of=3,xshift=-3mm] (F6) {$F_6$};
+\node [left of=12,xshift=-1cm] (F5) {$F_5$};
+
+\draw ($(12.north west)+(5.5cm,5cm)$) node[circle,draw, fill=blue!18,label=120:$s_0$,minimum size=2.5em] (s0) {m};
+\node [below of=s0,circle,label=160:$s_1$,draw,fill=blue!18,minimum size=2.5em] (s1) {};
+
+\draw [dashed](s1) to [loop below] (s1);
+\draw (s0) to[bend right] (s1);
+\draw [dashed] (s1) to[bend right] (s0);
+
+\node [label=120:M:,fit={(s0) (s1) ($(s0.north west)+(-0.5cm,0.5cm)$) ($(s1.south west)+(-0.8cm,-0.8cm)$) ($(s1.south east)+(0.8cm,-0.8cm)$) },dashed,draw] (modelo) {};
+;
+\end{tikzpicture}
+}
+\end{center}
+
+ \caption[Arena colorida de jogo com 3 valores]{ Exemplo de arena para jogo de três valores. As configurações são coloridas com ($F$), ($\top$) ou ($\perp$). A arena está particionada em suas CFCMs identificadas por $F_i$, com $i \in  \mathbb{N}^*$ . Arestas \textit{may} são identificadas por setas seccionadas e as \textit{must} por setas sólidas.  \\Fonte. Adaptada de \citeonline[p. 11]{aline}.}
+\label{fig:ex3valores}
+\end{figure}
+
+A arena da figura \ref{fig:ex3valores} está particionada em suas  CFCMs $F_i$, onde $i$ informa a ordem de coloração, com respeito a relação de ordem parcial $\leq$. Assim, colore-se primeiramente as CFCMs $F_1, F_2, F_3$ e $F_4$. Como todas elas contém apenas uma configuração terminal, aplica-se somente as regras da primeira fase do algoritmo de coloração. As configurações terminais $C_{18}$ e $C_{5}$ são coloridas com $\perp$, pois os literais $m$ e $\neg m$ são indeterminados no estado $s_1$. As próximas CFCMs a serem coloridas são $F_5$ e $F_6$. Em $F_5$ colore-se primeiro $C_{17}$ com $\top$, visto que Eva ($\exists$) tem estratégia de ganhar neste nó. A coloração é, então, propagada para $C_{16}$. Como mais nenhuma regra da primeira fase pode ser aplicada, passa-se para a segunda fase e colore-se, neste caso, todos os nós remanescentes com $\perp$. Ao final da coloração de $F_5$, passa-se a colorir as configurações em $F_6$. Finalmente, as CFCMs $F_7$, $F_8$, $F_9$ e $F_{10}$ são coloridas; sendo aplicadas somente as regras da primeira fase. Ao final, a configuração $C_0$ é colorida com $\perp$. Logo, a verificação de modelos para o KMTS $M$ da figura \ref{fig:ex3valores} resulta em indefinido. Neste caso, existem estruturas de Kripke no conjunto expandido pelo KMTS que satisfazem a propriedade especificada e outras estruturas que não satisfazem. Assim, o refinamento deste KMTS pode ser realizado a fim de se obter os modelos CTL que satisfazem a especificação. 
+
+%As regras (2) e (6) da figura \ref{fig:regras3valores} refletem as transições do KMTS, podendo serem elas transições \textit{may} ou \textit{must}. Se Evaão~ap ão
+%
+%as estratégias dos jogadores são diferentes. Devemos agora considerar as estratégias de não perder, propostas \cite{grumbergalg} 
+
+\chapter{Refinamento de Modelos KMTS}
+\label{cap:refinamentoModelos}
+
+Os algoritmos de verificação de modelos existentes, geralmente, não reparam o modelo quando este falha em satisfazer as propriedades requeridas. Neste caso, o verificador de modelos retorna o caminho do modelo onde se encontra a inconsistência, para que o projetista possa fazer a correção. Porém, à medida que o sistema se torna mais complexo, a tarefa do projetista em fazer esta correção torna-se mais difícil, mesmo com o caminho de contraexemplo fornecido. Neste cenário, um mecanismo automático que possa auxiliar na correção ou até mesmo realizá-la torna-se desejável. 
+
+Quando a verificação de modelos em um KMTS resulta em falso ou indefinido ($F$ ou $\perp$, respectivamente) torna-se necessário refinar o modelo a fim de se obter as estruturas de Kripke, representadas pelo KMTS, que satisfazem a propriedade requirida. Vale ressaltar, que devido ao fato da verificação de modelos com lógica de três valores poder resultar em indefinido para fórmulas insatisfazíveis, o refinamento somente será possível, se a propriedade desejada for consistente. Caso contrário, nenhum modelo será retornado ao final do refinamento.  O trabalho em \cite{aline} propõe um algoritmo de refinamento para o KMTS quando o resultado da verificação de modelos resulta em $\perp$. O trabalho, por eles proposto, utiliza as estratégias de não perder dos jogadores, apresentadas no capítulo anterior, a fim de obter as possíveis causas de falha e utilizar esta informação no processo de refinamento.
+%baseia-se em revisão de modelos e nas testemunhas de falha introduzidas pelo conceito de estratégia de não perder dos jogadores apresentadas no capítulo anterior para realizar o refinamento. 
+
+
+Apresentamos na seção \ref{sec:refconceitos} os conceitos básicos sobre refinamentos de modelos KMTS e na seção \ref{sec:refmodelkmts} o algoritmo de refinamento de modelos KMTS quando a verificação de modelos sobre o mesmo resulta em $\perp$.
+
+%
+%Apresentamos na seção \ref{sec:refconceitos} as operações de modificações que podem ser aplicadas sobre um KMTS, bem como o critério de minimalidade do conjunto de modificações a ser aplicado sobre o modelo. Na seção \ref{sec:refmodelkmts}, o algoritmo de refinamento de modelos KMTS para quando o resultado da verificação de modelos resulta em $\perp$. 
+%A revisão de modelos, pode ser utilizada nesta tarefa.
+
+\section{Conceitos Preliminares}
+\label{sec:refconceitos}
+
+O processo de refinamento do KMTS consiste em aplicar um conjunto de modificações sobre o modelo. Este conjunto de modificações, aplicado sobre um KMTS, deve conservar o maior número possível de informações do modelo original. Como o KMTS representa diversos modelos CTL, modificações no mesmo podem alterar o conjunto das estruturas de Kripke por ele representado. Devemos portanto estabelecer os critérios de mudança mínima tanto para um modelo CTL quanto para um KMTS de forma que as mudanças aplicadas sobre um KMTS estejam de acordo com o critério de minimalidade estabelecido para os modelos CTL. Ou seja, uma mudança minimal em um KMTS deve também ser minimal para todas as estruturas de Kripke representadas pelo mesmo. 
+
+O trabalho \cite{aline} apresenta um critério de minimalidade para  modelos CTL e KMTS. Estes critérios de minimalidade baseiam-se nos conceitos de revisão de crença. Esta, por sua vez, tem como finalidade alterar um conjunto de crenças frente a novas informações, possivelmente inconsistentes, de forma a manter a consistência do mesmo.
+
+%Com o objetivo de realizar o reparo de modelos CTL, os autores em \cite{wasserman} propõem um critério de mudança mínima sobre as estruturas de Kripke. Este critério de minimalidade baseia-se nos conceitos de revisão de crença. Esta, por sua vez, tem como finalidade alterar um conjunto de crenças frente a novas informações, possivelmente inconsistentes, de forma a manter a consistência do mesmo.  Esta alteração deve obedecer também a um critério de minimalidade, a fim de preservar o maior número de informações do conjunto. Baseados nestes princípios, os autores identificaram cinco operações básicas das quais derivam todas as mudanças possíveis sobre um modelo CTL:
+%
+%\begin{description}[noitemsep]
+%	\item $PU_1$: Adicionar um par a relação $R$
+%	\item $PU_2$: Remover um par da relação $R$
+%	\item $PU_3$: Mudar a função de rotulação de um estado
+%	\item $PU_4$: Adicionar um estado a S
+%	\item $PU_5$: Remover um estado de S
+%\end{description}
+%
+%Dada duas estruturas de Kripke $M_1=\{S_1,R_1,L_1\}$ e $ M_2 =\{S_2,R_2,L_2\} \mbox{ e seja } PU_i$ uma das operações acima, com i = 1,..,5. O trabalho \cite{wasserman} apresenta  $\textit{Diff}_{PU_i}(M_1,M_2)$ como a diferença estrutural entre  $M_2$ e $M_1$, onde $M_2$ é o modelo obtido ao aplicar a operação $PU_i$ sobre $M_1$. Por exemplo, $\textit{Diff}_{PU_2}(M_1,M_2)$ é o conjunto de arestas que removidas de $M_1$ gera o modelo $M_2$, isto é, o conjunto $R_1 - R_2$. 
+%
+%Uma mudança sobre um modelo $M_1$ é dita admissível (minimal) se gera um modelo $M_2$, tal que $M_2$ satisfaz as propriedades requeridas e não existe um outro modelo $M_3$ gerado a partir de $M_1$ tal que $\textit{Diff}_{PU_i}(M_1,M_3) \subseteq \textit{Diff}_{PU_i}(M_1,M_2)$ para $1 \leq i \leq 5$ . Ou seja, não existe outro modelo $M_3$ a partir de $M_1$, obtido por uma das operações de mudanças, em que a diferença entre $M_1$ e $M_3$ seja menor que a diferença entre $M_1$ e $M_2$. Em outras palavras, $M_2$ deve ser um modelo minimal obtido de $M_1$ ao se aplicar uma das operações básicas de mudanças. 
+
+%O processo de refinamento do KMTS consiste em aplicar um conjunto de modificações sobre o modelo. O conjunto de modificações aplicado sobre o KMTS a ser refinado deve ser mínimo, com o objetivo de conservar o maior número possível de informações do modelo original.
+
+O trabalho \cite{aline} apresenta cinco operações básicas de modificação que podem ser aplicadas sobre um KMTS, são elas:
+%operações básicas 
+%de :
+%
+\begin{description}[noitemsep]
+	\item $P_1$: Remover um par da relação $R^-$
+	\item $P_2$: Remover um par da relação $R^+$
+	\item $P_3$: Transformar um par ($s_i,s_j$) em $R^-$ para um par ($s_i,s_j$) em $R^+$
+	\item $P_4$: Mudar um literal definido em um estado $s$
+	\item $P_5$: Atribuir um literal a um estado, caso ele seja indefinido no estado
+\end{description}
+
+%Antes de apresentarmos o critério de mudança mínima proposto em \cite{aline}, devemos considerar as seguintes notações definidas pelos autores.
+%%
+%Mudança é um conjunto $X = (X_{P_1},...,X_{P_5})$ , onde cada $X_{Pn}$ é um conjunto, possivelmente vazio, de modificações primitivas relativo a uma das operações definidas acima, com $1 \leq n \leq 5$. Cada elemento em $X_{P_n}$ é representado por $(s_i,s_j)$ ou $(s_i,l)$ (referente às operações sobre transições ou estados, respectivamente), onde $l$ é um literal. $X = (X_{P_1},...,X_{P_5}) \subset Y = (Y_{P_1},...,Y_{P_5})$ se cada $X_{P_n} \subseteq Y_{P_n}$ e pelo menos um $X_{P_i} \subset Y_{P_i}$. A aplicação de uma mudança $X$ sobre um modelo $M$, resulta em um outro modelo denotado por $M(X)$. 
+
+O critério de mudança mínima sobre um KMTS  considera apenas duas das operações acima: $P_2$ e $P_4$. Estas duas operações são suficientes para alterar todos os modelos CTL representados por um KMTS. Tomemos, por exemplo, o KMTS da figura \ref{fig:ex_kmts} e as estruturas de Kripke expandidas a partir do mesmo apresentadas na figura \ref{fig:conjunto_kripke}. Dentre os modelos CTL presentes na figura \ref{fig:conjunto_kripke} alguns já sofreram alterações sobre a operação $P_1$: os modelos $K_3,K_4,K_5$ e $K_6$, por exemplo, são modelos obtidos através da remoção da aresta \textit{may} $s_0 \to s_1$. O mesmo ocorre para as operações $P_3$ e $P_5$. Tomemos, como exemplo, atribuir a proposição atômica $p$ ao estado $s_1$. Assim como no caso da operação $P_1$, todos os modelos obtidos através desta modificação do KMTS já estão presentes na figura \ref{fig:conjunto_kripke}. Vale observar, no entanto, que a aplicação da operação $P_2$ sobre o KMTS da figura \ref{fig:ex_kmts} gera modelos CTL não presentes na figura \ref{fig:conjunto_kripke}. 
+
+
+
+\begin{figure}[htb]
+\begin{center}
+\resizebox{!}{6.5cm}{%
+ \begin{tikzpicture}[scale=0.95,->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, every node/.style={circle,fill=blue!18,draw,minimum size=2.5em, font=\sffamily\small\bfseries}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+\draw (-0.5,0)  node (1)  [label=60:$s_1$ ] { $ \neg p$ };
+\draw (-1.5,2)  node (0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (-2.5,0)  node (2)  [label=120:$s_2$ ] { $ \neg p$ };
+%\node [draw=none, fill=none] (l1) [right of=0] {k4};
+\draw (-3,2.8) node(l1) [draw=none, fill=white]{$K_2$:};
+\draw (-7,2.8) node(l1) [draw=none, fill=white]{$K_1$:};
+\draw (1,2.8) node(l1) [draw=none, fill=white]{$K_3$:};
+\draw (5,2.8) node(l1) [draw=none, fill=white]{$K_4$:};
+
+\draw (-7,-2) node(l1) [draw=none, fill=white]{$K_5$:};
+\draw (-3,-2) node(l1) [draw=none, fill=white]{$K_6$:};
+\draw (1,-2) node(l1) [draw=none, fill=white]{$K_7$:};
+\draw (5,-2) node(l1) [draw=none, fill=white]{$K_8$:};
+
+\draw (-4.5,0)  node (1_1)  [label=60:$s_1$ ] { $ p$ };
+\draw (-5.5,2)  node (1_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (-6.5,0)  node (1_2)  [label=120:$s_2$ ] { $ \neg p$ };
+
+\draw (1.5,0)  node (2_1)  [label=120:$s_2$ ] { $ \neg p$ };
+\draw (2.5,2)  node (2_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (3.5,0)  node (2_2)  [label=60:$s_1$ ] { $ \neg p$ };
+
+\draw (5.5,0)  node (3_1)  [label=120:$s_2$ ] { $ \neg p$ };
+\draw (6.5,2)  node (3_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (7.5,0)  node (3_2)  [label=60:$s_1$ ] { $ p$ };
+
+\draw (0) to (1);
+\draw (0) to (2);
+%\draw (1) to (2);
+
+\draw (1_0) to (1_1);
+\draw (1_0) to (1_2);
+%\draw (1_1) to (1_2);
+
+\draw (2_0) to (2_1);
+%\draw (2_2) to (2_1);
+
+\draw (3_0) to (3_1);
+%\draw (3_2) to (3_1);
+
+\draw (-0.5,-4.5)  node (4_1)  [label=60:$s_1$ ] { $ \neg p$ };
+\draw (-1.5,-2.5)  node (4_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (-2.5,-4.5)  node (4_2)  [label=120:$s_2$ ] { $ \neg p$ };
+
+\draw (-4.5,-4.5)  node (5_1)  [label=60:$s_1$ ] { $ p$ };
+\draw (-5.5,-2.5)  node (5_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (-6.5,-4.5)  node (5_2)  [label=120:$s_2$ ] { $ \neg p$ };
+
+\draw (1.5,-4.5)  node (6_1)  [label=120:$s_2$ ] { $ \neg p$ };
+\draw (2.5,-2.5)  node (6_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (3.5,-4.5)  node (6_2)  [label=60:$s_1$ ] { $ \neg p$ };
+
+\draw (5.5,-4.5)  node (7_1)  [label=120:$s_2$ ] { $ \neg p$ };
+\draw (6.5,-2.5)  node (7_0)  [label=120:$s_0$ ] { $ \neg p$ };
+\draw (7.5,-4.5)  node (7_2)  [label=60:$s_1$ ] { $ p$ };
+
+%\draw (4_1) to (4_2);
+%\draw (5_1) to (5_2);
+
+%\draw (6_2) to (6_1);
+\draw (6_0) to (6_2);
+%\draw (7_2) to (7_1);
+\draw (7_0) to (7_2);
+
+%\node[ label=(75):$s_76$ ] (70) [ left of=0] {$ r$};
+;
+
+\end{tikzpicture}
+}
+\end{center}
+\centering \caption[Estruturas de Kripke geradas por um KMTS modificado da figura \ref{fig:ex_kmts}]{Estruturas de Kripke obtidas através da expansão do KMTS gerado pela remoção da transição $(s_1,s_2)$ da figura \ref{fig:ex_kmts}.}
+\label{fig:revkmts}
+\end{figure}
+
+%O conjunto de modificações aplicado sobre o KMTS a ser refinado deve ser mínimo, com o objetivo de conservar o maior número possível de informações do modelo original. 
+Apresentamos na figura \ref{fig:revkmts} o conjunto das estruturas de Kripke expandidas a partir do KMTS obtido através da remoção da transição \textit{must} $(s_1,s_2)$ da figura \ref{fig:ex_kmts}. De fato, todos os modelos presentes nesta figura são diferentes dos modelos gerados pelo KMTS sem a modificação em questão. Em outras palavras, todos os modelos gerados pelo KMTS sofreram a modificação aplicada sobre ele ($PU_2$).
+
+Observamos então, que no conjunto dos modelos CTL expandido por um KMTS, já existem estruturas de Kripke que refletem as operações $P_1$, $P_3$, e $P_5$. Isso se deve ao fato da interpretação das transições \textit{may} e a indefinição das proposições atômicas nos estados serem tratadas como presença e ausência dos mesmos nas estruturas de Kripke. Desta forma, para alterar todos os modelos CTL representados por um KMTS, é suficiente considerar somente as operações $P_2$ e $P_4$. Assim, o critério de mudança mínima sobre um KMTS $M$ qualquer é definido sobre uma mudança reduzida $X/$, considerando somente estas duas operações, definida como segue:
+
+%\begin{defi}
+%\textnormal{ \cite{aline}
+%Seja $X=\{ X_{P_1},\dots,X_{P_5} \}$ uma mudança qualquer, a mudança reduzida $X/$ é definida como $X/ = (X_{P_2}, X_{P_4})$
+%}
+%\end{defi}
+%
+%%A definição \ref{def:minkmts} apresenta o critério de mudança miníma proposto por \cite{aline}. Devemos, antes, considerar as seguintes notações definidas pelos autores. 
+%
+%\begin{defi}\label{def:minkmts}
+%\textnormal{\cite{aline}
+%Dada duas mudanças $ X1 = (X1_{P_1},\dots, X1_{p_5})$ e $ X2 = (X2_{P_1},\dots, X2_{p_5})$, $X1 \leq X2$ se e somente se para todo $n$, $X1/P_n \subseteq X2/P_n$. $X1 < X2$ se e somente se $X1 \leq X2$ e existe no mínimo $n$, tal que $X1/P_n \subset X2/P_n$. Se não existe nenhum $X2$, tal que $X2 < X1$, então $X1$ é minimal.
+%}
+%\end{defi}
+%
+%A prova de que a definição acima é de fato minimal pode ser encontrada no trabalho dos próprios autores. 
+
+Quando a verificação de modelos sobre um KMTS $M$ retorna $\perp$ devemos refiná-lo, ou seja, selecionar dentre os modelos CTL representados por $M$ aqueles que satisfazem a especificação desejada. Assim, devemos considerar somente as operações $P_1$, $P_3$ e $P_5$, uma vez que não queremos modificar as estruturas de Kripke representadas por $M$, mas apenas selecioná-las do conjunto. Como já dito antes, existem modelos no conjunto expandido do KMTS que espelham estas operações. Assim, a aplicação das mesmas sobre o KMTS, apenas seleciona esses modelos. Vale observar que uma mudança $X$ considerando essas três operações obedece ao critério de minimalidade  estabelecido em \cite{aline}.
+
+%$X_{Pn}$ denota um conjunto de mudanças relativa a uma das operações $P_n$ definidas a cima, com $1 \leq n \leq 5$. Cada mudança  
+
+
+
+\section{Algoritmo de Refinamento de Modelos KMTS}
+\label{sec:refmodelkmts}
+
+%Seja $M$ um KMTS qualquer e $\psi$ uma especificação CTL, então $M,s_0 \models \psi = \perp$ ocorre se e somente se ambos os jogadores tem estratégia de não perder a partir de $(s_0,\psi)$. Desta forma
+%
+%\begin{enumerate}[noitemsep]
+%	\item A jogada ($C_0, \dots, C_j$) é finita e termina em uma configuração terminal 
+%\end{enumerate}
+
+
+
+O algoritmo de refinamento utiliza a estratégia de não perder dos jogadores para buscar no grafo de configurações do jogo as testemunhas de falha. Elas representam as possíveis causas responsáveis pelo resultado de indefinição do jogo. Elas são definidas como segue:
+
+\begin{enumerate}[noitemsep]
+	\item Uma transição  \textit{may} genuína ($R^-/R^+$), pertencente a uma estratégia de não perder de Abelardo $(\forall)$, proveniente de um nó $AX$ colorido com $\perp$ para um nó colorido com $F$ ou $\perp$.
+	\item Uma transição  \textit{may} genuína, pertencente a uma estratégia de não perder de Eva $(\exists)$, proveniente de um nó $EX$ colorido com $\perp$ para um nó colorido com $T$ ou $\perp$.
+	\item Uma transição \textit{must} proveniente de um nó $AX$ colorido com $\perp$ ou um nó $EX$, ambos coloridos com $\perp$, para um nó colorido com $\perp$.
+	\item Uma transição, pertencente a uma estratégia de não perder de Eva $(\exists)$, proveniente de um nó $s_i \vdash l \vee \psi$ colorido com $\perp$ para um nó $s_i \vdash l$ colorido com $\perp$, onde $l$ é um literal.
+	\item Uma transição, pertencente a uma estratégia de não perder de Abelardo $(\forall)$, proveniente de um nó $s_i \vdash l \wedge \psi$ colorido com $\perp$ para um nó $s_i \vdash l$ colorido com $\perp$, onde $l$ é um literal.
+\end{enumerate}
+
+Como informado no capítulo \ref{cap:modelosformais}, um KMTS representa um grande conjunto de estruturas de Kripke, no entanto para um conjunto de modelos CTL dado, pode ser necessário considerar mais de um KMTS. 
+%Dessa forma, para representar todas as estruturas de Kripke selecionadas do conjunto, pode ser necessário mais de um KMTS. 
+A fim de se obter estes modelos, o algoritmo deve considerar todas as testemunhas de falhas, e então aplicar as mudanças necessárias, considerando uma de cada vez até obter um KMTS que satisfaça a especificação. E então procurar pelas próximas combinações que gerem outros KMTSs. Observe que não se deve considerar todas as aplicações de uma mudança $X_{P_n}$ de vez, pois transições \textit{may} e indefinições de proposições atômicas nos estados já expressam estas possibilidades. Por exemplo, para um nó do tipo $s_i \vdash l_1 \vee l_2$ colorido com $\perp$ e ambos os nós filhos, coloridos com $\perp$, é suficiente considerar uma alteração por vez. Considerar as duas mudanças ao mesmo tempo, de fato, não geraria uma mudança minimal.
+
+As testemunhas de falhas são transições no grafo do jogo e informam as jogadas realizadas por um jogador com o objetivo de evitar a derrota no jogo, ou seja, as jogadas responsáveis pelo empate \cite{aline}. Como estamos interessados em realizar mudanças no KMTS a fim de selecionar os modelos CTL que satisfazem a especificação, devemos então considerar as testemunhas de falha e alterá-las de modo a garantir que Eva $(\exists)$ tenha estratégia de ganhar no grafo do jogo. Desta forma, o resultado da verificação de modelos resultará em $\top$ ao final do refinamento. As operações de alterações como já informado na seção anterior são três: $P_1, P_3$ e $P_5$.
+
+%Se um nó qualquer do grafo do jogo tem cor $\top$ ou $F$, então o jogador daquele nó ou não tem estratégia de não perder, ou tem estratégia de ganhar. Caso contrário, o jogador da configuração em questão tem uma estratégia de não perder. Devemos considerar as jogadas de não perder, dos jogadores, que introduzem as falhas do jogo. Desta forma, uma configuração $C_i$ do grafo do jogo colorida com $\perp$, pode ser responsável pela introdução da falha, ou é colorida pela propagação desta falha até ela, ou seja, pertencente a uma jogada $C_i, \; , C_{i+1}, \; \dots, C_j$, onde $C_j$ ou $C_{j-1}$ são responsáveis pela jogada de não perder. Por exemplo, na figura \ref{fig:ex3valores}, a configuração $C_2$ tem cor $\perp$, no entanto, ela não é responsável pela introdução da falha no jogo, ela simplesmente pertence a uma jogada, onde a falha foi introduzida. Neste caso, as testemunhas responsáveis são
+As alterações são decididas de acordo com a testemunha de falha $(m,n)$ tomada. Em toda testemunha de falha, $m$ sempre estará colorida com $\perp$ visto que reflete uma jogada de não perder de um dos dois jogadores.
+
+%Se a configuração inicial $C_0$ do grafo do jogo tem valor $\perp$, então existe alguma jogada originada de uma estratégia de não perder de um dos jogadores. A fim de 
+
+Se $m$ é da forma $(s, \vdash EX \psi)$ então $n$ está colorido com $\top$ conectado a $m$ por uma transição \textit{may} genuína. Neste caso, devemos transformar a transição $(m,n)$ em transição \textit{must}, garantindo assim que Eva $(\exists)$ jogue consistentemente. O nó $n$, pode ser também da forma $(s_j, Z)$, onde $Z$  é uma variável. Se $(s_j, Z)$ representa um ciclo no jogo e $Z$ for uma variável de maior ponto fixo $(\nu)$, então devemos, também, transformar $(m,n)$ em uma transição \textit{may}.
+
+Para os casos em que $m$ é da forma $l \vee \psi$ ou $l \wedge \psi$ e $n=(s,l)$ estiver colorido com $\perp$, devemos definir $l$ no estado $s$ se as seguintes condições ocorrerem: para $m$ da forma $l \vee \psi$, a configuração $(s,\psi)$ está colorida com $\perp$ ou $F$; para $m$ da forma $l \wedge \psi$, a configuração $(s,\psi)$ está colorida com $\perp$ ou $\top$.
+
+%Para os casos em que $m$ é da forma $l \vee \psi$, se  $n=(s, l)$ está colorido com $\perp$ e $(s,\psi)$ está colorido com $\perp$ ou $F$. Devemos, então, definir $l$ no estado $s$ do KMTS. Se $m$ for da forma $l \wedge \psi$, $n=(s,l)$ estiver colorido com $\perp$ e $(s,\psi)$ estiver colorido com $\top$ ou $\perp$, então devemos definir $l$ no estado $s$ do KMTS.
+
+Se $m$ é da forma $AX \psi$ então ele será colorido com $\top$ somente nos seguintes casos: todos os nós filhos de $m$ estão coloridos com $\top$ ou não tem nenhum nó filho. Como $m$ é uma testemunha de falha, então $n$ ou está colorido com $F$ e é filho de $m$ através de uma aresta \textit{may} genuína, ou ainda, está colorido com $\perp$ independente da aresta que o conecta com $m$. Assim, para os dois casos, aresta que os conecta deve ser cortada. No caso em que $n$ está colorido com $\perp$ e é do tipo $s_j \vdash l$, onde $l$ é um literal, duas alterações devem ser consideradas: definir o literal $l$ no estado $s_j$ do modelo, ou cortar a transição que conecta $n$ a $m$. Neste último caso,  a fim de considerar todas as combinações, o algoritmo duplica a testemunha de falha, sendo que uma delas é anotada com o sinal negativo, informando que a mesma é uma duplicata da outra. O algoritmo ao considerar a testemunha sem sinal negativo irá definir o literal $l$ ou estado $s$, para o outro caso, o algoritmo irá corta a transição \textit{may}. O algoritmo jamais considerará as duas testemunhas em uma mesma combinação, uma vez que cortar a aresta $(m,n)$ e definir $l$ ou estado $s$, nunca geraria um modelo minimal. Vale observar também que tal modificação não faz sentido, visto que a aresta é cortada, tornando assim $n$ sempre inacessível. 
+
+Poderíamos pensar, a princípio, que os  casos a seguir, deveriam também ser considerados, visto que refletem jogadas da estratégia de não perder dos jogadores:
+
+\begin{enumerate}[label=(\arabic*),noitemsep]
+	\item Nó da forma $EX \psi$ colorido com $\perp$ para um nó $\psi$ também colorido com $\perp$, independente do tipo de aresta que os conecta.
+	\item Nó da forma $\psi_1 \vee \psi_2$ com um dos nós filhos colorido com $\perp$ ou $F$ e o outro colorido com $\perp$.
+	\item Nó da forma $\psi_1 \wedge \psi_2$ com um dos nós filhos colorido com $\perp$ ou $\top$ e o outro colorido com $\perp$.
+ \end{enumerate} 
+ 
+ Para os casos acima, $EX$ ou $\psi_1 \vee \psi_2$ ou $\psi \wedge \psi_2$ colorido com $\perp$ conectar-se a um outro nó colorido também com $\perp$ de fato reflete uma jogada de não perder do jogador. No entanto, esta jogada não reflete nenhuma alteração no modelo do jogo. Ou seja, a falha introduzida está em alguma das outras condições acima já explicadas. Tomemos como exemplo a configuração $C_1$ colorida com $\perp$  da figura \ref{fig:ex3valores}. Observamos que em $C_1 $ Eva $(\exists)$ pode escolher jogar para $C_{11}$ ou $C_2$ a fim de não perder. No entanto, estas transições não fornecem nenhuma informação que permita alterar o modelo $M$ a fim de garantir que Eva $(\exists)$ tenha estratégia de ganhar na mesma. A alteração deve ser feita em algum nó ou transição descendente que propague a coloração até $C_1$ de forma a garantir que Eva $(\exists)$  tenha estratégia de ganhar em $C_1$. Neste caso, se tomarmos a testemunha $C_4 \to C_5$ e definirmos $\neg m$ no estado $s_1$ do modelo, $C_4$ ainda terá estratégia de não perder por $C_6$. No entanto, $C_4 \to C_6$ não representa nenhuma alteração a ser feita no modelo. Podemos ainda considerar a testemunha de falha $C_6 \to C_7$. De acordo com o que foi estabelecido acima, devemos remover a transição $s_1 \to s_0$ do modelo. Assim, $C_6$ será colorido com $\top$. Tal coloração propaga-se para $C_4$, que agora tem ambos os nós filhos coloridos com $\top$. A coloração propaga-se até $C_2$. Eva $(\exists)$, agora, em $C_1$ tem estratégia de ganhar, visto que pode jogar para $C_2$. Tal coloração espalha-se agora até $C_0$. Reparamos, assim, o KMTS ao considerar estas duas testemunhas de falha. Outros modelos podem ser obtidos ao considerarmos outras combinações de testemunhas.
+
+Tratamos no próximo capítulo sobre a implementação do algoritmo proposto em \cite{aline}.
+ 
+
+\chapter{Implementação do Refinamento de Modelos KMTS}
+\label{cap:refinamento}
+
+Implementamos, neste trabalho, o algoritmo de refinamento de modelos KMTS proposto em \cite{aline}. O pseudocódigo do mesmo, no entanto, encontra-se em um alto nível de abstração. Por isso, foi necessário refiná-lo de forma a trazê-lo mais próximo de uma linguagem de programação concreta. A linguagem escolhida para o desenvolvimento foi C/C++. O código fonte pode ser encontrado em \cite{jandson}
+
+Na seção \ref{sec:algabstr}, apresentamos uma visão geral do algoritmo proposto por \cite{aline}. Na seção \ref{sec:implementacao} tratamos sobre a implementação do algoritmo, bem como os aspectos técnicos envolvidos no processo. Finalmente, na seção \ref{sec:otimizacao} propomos algumas otimizações que podem ser aplicadas sobre o algoritmo.
+
+\section{Algoritmo}
+\label{sec:algabstr}
+
+O algoritmo de refinamento é especificado em um alto nível de abstração. Ele chama um algoritmo de revisão de modelos para lógica de três valores e espera que o mesmo retorne uma lista das testemunhas de falhas, quando este resultar em indefinido. O algoritmo considera então todas as combinações possíveis destas testemunhas, que quando tratadas, reparam o modelo. O algoritmo é, em sua essência, combinatório. Por considerar todas as combinações, pode-se obter ao final modelos repetidos, e até mesmo modelos que não obedecem ao critério de minimalidade estabelecido. %Ele é divido em três rotinas: Revisão de jogo, refinamento do jogo e refinamento de jogada.
+ 
+Explicamos abaixo o funcionamento do algoritmo. Por uma questão de legibilidade e clareza, explicaremos o funcionamento do mesmo sobre um exemplo. O pseudocódigo pode ser encontrado no trabalho dos autores. Tomemos como exemplo o modelo e fórmula CTL apresentados na figura \ref{fig:exalgs}, bem como a arena gerada a partir deles apresentada na mesma figura. A verificação de modelos para este exemplo, como pode ser observado, resulta em indefinido. Podemos observar, que as testemunhas de falha são: $(C_4,C_5), \; (C_6,C_3)$, $ \; (C_6,C_7), \; (C_{13},C_{14}), \; (C_{15}, C_{12})$ e $(C_{15}, C_{16}) $.
+
+\begin{figure}[htb]
+\begin{center}
+\resizebox{!}{10cm}{%
+\tikzset {main node/.style = {rectangle, solid,draw, fill=blue!18, align=center},
+eva/.style = {ellipse, solid,draw, fill=blue!18, align=center},
+any/.style={draw,shape=rectangle}
+}
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, level/.style={rectangle,draw, fill=blue!18,draw,font=\sffamily\small\bfseries,sibling distance = 4cm,
+  level 2/.style={sibling distance=11cm},
+    level 5/.style={sibling distance=4cm},
+%        level 5/.style={sibling distance=4.2cm},
+%       level 7/.style={sibling distance=6cm},
+  level distance = 1.4cm}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+\node [main node, label = 180:$C_0$] (0){$s_0 \vdash AX ( ( \nu Z. \neg m \wedge AX Z) \vee (\mu Y. m \wedge AX Y)) \; (\perp)$ }
+  child {node [eva, label=180:$C_1$] (1) {$s_1 \vdash ( \nu Z. \neg m \wedge AX Z) \vee (\mu Y. m \wedge AX Y) \; (\perp)$ } 
+  	child{node [main node, label=180:$C_2$] (2) {$s_1 \vdash \nu Z. \neg m \wedge AX Z \; (\perp)$}
+  	 	child {node [eva, label=180:$C_3$] (3) {$s_1 \vdash Z \; (\perp)$}  	 	
+			child{node [main node, label=180:$C_4$] (4) {$ s_1 \vdash \neg m \wedge AX Z \; (\perp)$} 
+				child{node [eva, label=180:$C_5$,xshift=-4mm] (5) {$ s_1 \vdash \neg m \; (\perp)$} }
+				child{node [main node, label=180:$C_6$] (6) {$ s_1 \vdash  AX Z \; (\perp)$} 
+			child{node [eva, label=180:$C_7$] (7) {$ s_0 \vdash Z \; (F)$} edge from parent [dashed] 
+			child{node [main node, label=180:$C_8$] (8) {$ s_0 \vdash \neg m \wedge AX Z \; (F)$} edge from parent [solid]  
+				child{node [eva, label=180:$C_9$,xshift=-4mm] (9) {$ s_0 \vdash \neg m  \; (F)$} edge from parent [solid] }		
+				child{node [main node, label=180:$C_{10}$,xshift=-4mm] (10) {$ s_0 \vdash AX Z \; (\perp)$} edge from parent [solid] }
+			}			
+			}				
+				}
+			}  	 	
+  	 	}
+  	}
+  	child{node [main node, label=180:$C_{11}$] (11) {$ s_0 \vdash \mu Y. m \wedge AX Y \; (\perp)$}  	  						
+  	 	child {node [eva, label=180:$C_{12}$] (12) {$s_1 \vdash Y \; (\perp)$}  	 	
+			child{node [main node, label=180:$C_{13}$] (13) {$ s_1 \vdash m \wedge AX Y \; (\perp)$} 
+				child{node [eva, label=180:$C_{14}$,xshift=-2mm] (14) {$ s_1 \vdash  m  \; (\perp)$} }
+				child{node [main node, label=180:$C_{15}$] (15) {$ s_1 \vdash  AX Y \; (\perp)$} 
+			child{node [eva, label=180:$C_{16}$] (16) {$ s_0 \vdash Y \; (\perp)$} edge from parent [dashed] 
+			child{node [main node, label=170:$C_{17}$] (17) {$ s_0 \vdash m \wedge AX Y \; (\perp)$} edge from parent [solid]  
+				child{node [eva, label=180:$C_{18}$] (18) {$ s_0 \vdash m \; (\top)$} edge from parent [solid] }		
+				child{node [main node, label=180:$C_{19}$] (19) {$ s_0 \vdash AX Y \; (\perp)$} edge from parent [solid] }
+			}			
+			}				
+				}
+			}  	 	
+  	 	}
+		}  	
+  	}
+;
+
+\draw (10) to[in=0,out=-30] (3);
+\draw [dashed] (6) to[in=-10,out=0] (3);
+\draw (19) to[in=0,out=-30] (12);
+\draw [dashed] (15) to[in=-10,out=0] (12);
+
+\node [draw,rectangle,fit={(18) ($(18.west)+(-0.7cm,0)$)},label=180:$F_1$] (F1){};
+\node [draw,rectangle,fit={(14) ($(14.west)+(-0.7cm,0)$)},label=180:$F_2$] (F2){};
+\node [draw,rectangle,fit={(5) ($(5.west)+(-0.7cm,0)$)},label=180:$F_4$] (F4){};
+\node [draw,rectangle,fit={(9) ($(9.west)+(-0.7cm,0)$)},label=180:$F_3$] (F3){};
+\node [draw,rectangle,fit={(0) ($(0.west)+(-0.7cm,0)$)},label=180:$F_{10}$] (F10){};
+\node [draw,rectangle,fit={(1) ($(1.west)+(-0.7cm,0)$)},label=180:$F_{9}$] (F10){};
+\node [draw,rectangle,fit={(2) ($(2.west)+(-0.7cm,0)$)},label=180:$F_{8}$] (F10){};
+\node [draw,rectangle,fit={(11) ($(11.west)+(-0.7cm,0)$)},label=180:$F_{7}$] (F10){};
+
+\draw node[fit={(3) ($(4.west)+(-1cm,0)+(0,-5mm)$)},xshift=5mm] (f1) {};
+\draw node [fit={ (6) ($(6.north)+(0,0.35cm)$) (7) (8) ($(8.south west)+(-0.6cm,-0.2cm)$)}] (f2) {};
+\draw node [fit={(10) ($(10.north west)+(-0.75cm,0.3cm)$) ($(10.south east)+(+0.35cm,0)$)}] (f3) {};
+\draw (f1.south west) -- (f2.north west) |- (f2.south west) -- (f3.north west) |- (f3.south west) -- (f3.south east) |- ($(f3.north east)+(0,6.85cm)$) -- (f1.north west) -- cycle;
+
+\draw node[fit={(12) ($(13.west)+(-1.2cm,0)+(0,-5mm)$)},xshift=5mm] (f11) {};
+\draw node [fit={ (15) ($(15.north)+(0,0.35cm)$) (16) (17) ($(17.south west)+(-0.8cm,-0.2cm)$)}] (f12) {};
+\draw node [fit={(19) ($(19.north west)+(-0.75cm,0.3cm)$) ($(19.south east)+(+0.35cm,0)$)}] (f13) {};
+\draw [label=ty](f11.south west) -- (f12.north west) |- (f12.south west) -- (f13.north west) |- (f13.south west) -- (f13.south east) |- ($(f13.north east)+(0,6.85cm)$) -- (f11.north west) -- cycle ;
+
+\node [left of=3,xshift=-3mm] (F6) {$F_6$};
+\node [left of=12,xshift=-1cm] (F5) {$F_5$};
+
+\draw ($(12.north west)+(5.5cm,5cm)$) node[circle,draw, fill=blue!18,label=120:$s_0$,minimum size=2.5em] (s0) {m};
+\node [below of=s0,circle,label=160:$s_1$,draw,fill=blue!18,minimum size=2.5em] (s1) {};
+
+\draw [dashed](s1) to [loop below] (s1);
+\draw (s0) to[bend right] (s1);
+\draw [dashed] (s1) to[bend right] (s0);
+
+\node [label=120:M:,fit={(s0) (s1) ($(s0.north west)+(-0.5cm,0.5cm)$) ($(s1.south west)+(-0.8cm,-0.8cm)$) ($(s1.south east)+(0.8cm,-0.8cm)$) },dashed,draw] (modelo) {};
+;
+\end{tikzpicture}
+}
+\caption[Arena colorida de jogo com 3 valores]{ Exemplo de verificação de modelos com resultado $\perp$}
+\label{fig:exalgs}
+\end{center}  
+\end{figure}
+
+O algoritmo irá considerar todas as combinações destas testemunhas, de forma a reparar o modelo. O mesmo não estabelece uma ordem de consideração das mesmas, ou seja, realiza uma busca cega à procura da solução final. Em outras palavras,  para o algoritmo, não é importante a ordem que ele irá tomar as testemunhas, visto que ao final todas as combinações serão realizadas. Tomemos, inicialmente a ordem apresentada acima. Desta forma, consideraremos a testemunha $(C_4,C_5)$. Neste caso, o refinamento irá aplicar a mudança $P_5={(s_1,\neg m)}$, ou seja, definir o literal $\neg m$ ao estado $s_1$. Após a aplicação desta mudança sobre o modelo, o algoritmo de refinamento é aplicado novamente, gerando uma nova arena e  obtendo-se  novas testemunhas de falhas. Assim, temos que a configuração $C_5$ será colorida com $\top$ enquanto a configuração $C_{14}$ será colorida com $F$. As testemunhas de falhas consideradas a partir de agora são:  $(C_6,C_3), \; (C_6,C_7), \; (C_{15},C_{12}), \; (C_{15},C_{16})$. Como informado anteriormente, um algoritmo não atribui nenhuma ordem às testemunhas, assim, qualquer uma poderá ser considerada, a fim de prosseguir com o refinamento. De fato, a testemunha anterior será combinada com todas estas novas testemunhas, gerando a partir deste  ponto modelos KMTS para cada uma destas combinações. Tomemos, então, a testemunha $(C_6,C_7)$. Logo, a transição \textit{may} $(s_1,s_0)$ do modelo será removida e o jogo recolorido. Resultando deste vez em $\top$, obtemos assim um KMTS que satisfaz a especificação. O algoritmo volta um passo na recursão e considera a próxima testemunha descartando $(C_6,C_7)$, e assim sucessivamente. Devemos observar, neste ponto, que o algoritmo utiliza a técnica de \textit{backtracking} a fim de encontrar todas as soluções do espaço de busca. Neste caso, todos os modelos KMTSs que satisfazem a fórmula especificada. 
+
+%Chamemos de $X = \{ P_1,P_2,P_3,P_4,P_5\}$ mudança aplicada a um KMTS, onde cada $P_i$, com $ 0 \leq i \leq 5$, é um conjunto de mudanças relacionada a operação $P_i$ assim se considerarmos as mudanças aplicadas acima temos um conjunto
+
+Chamemos o conjunto de mudanças acima exemplificado de $X_1$. Consideremos agora que o algoritmo tenha retornado para o passo da recursão onde acabara de considerar todas as combinações com as testemunhas $(C_4,C_5)$ e $(C_6,C_7)$, nesta ordem. Assim, ele deverá considerar um outro caminho em sua árvore de busca, ou seja, procurar novas testemunhas para serem combinadas com $(C_4,C_5)$. Vale observar,  que a testemunha $(C_6,C_7)$ (já considerada no caminho da recursão anterior), ainda ocorre na arena, ou seja, o algoritmo descarta apenas para avaliar outras possíveis combinações (caminhos na árvore de busca), devendo escolher em seu lugar entre $(C_6,C_3), \; (C_{15},C_{12}), \; (C_{15},C_{16})$. No entanto, $(C_6,C_7)$, poderá ser tomada novamente em outros caminhos, visto que ainda ocorre na arena. Com a única diferença, que a mesma ocorrerá, então, em níveis mais baixos da árvore de busca. Suponhamos que a testemunha escolhida tenha sido $(C_6,C_3)$. De acordo com as regras do algoritmo, para esta testemunha, devemos remover a transição \textit{may} $(s_1,s_1)$, ou seja, aplicar a operação $P1=(s_1,s_1)$. Logo, a arena deve ser recolorida. O resultado continua a ser indefinido, obtendo-se as testemunhas: $ \; (C_6,C_7), \; (C_{15}, C_{16}) $. Devemos observar, que após esta nova coloração a testemunha $(C_6,C_7)$, aparece outra vez, como explicado acima. No entanto, neste novo passo, esta testemunha será considerada, visto que o algoritmo proposto não trata estes casos. De fato, ele considera todas as combinações, sem fazer distinção quanto a ordem de ocorrência das testemunhas, em outras palavras, para o algoritmo, o conjunto de soluções é uma permutação. Consideremos, nesse passo, o momento em que ele escolhe novamente a testemunha $(C_6,C_7)$. %Vale ressaltar  que esta testemunha ocorreu na outra combinação, porém ainda não foi considerada nesta, visto que foi descartada em um passo anterior, a fim de obter as outras combinações. 
+Neste caso, ao considerarmos esta testemunha, devemos aplicar a operação $P_1=(s_1,s_0)$, removendo assim a transição \textit{may} $(s_1,s_0)$ do KMTS. Ao efetuarmos as modificações no modelo e recolorirmos a arena obtida após estas modificações,  obtemos $\top$ ao recolorirmos a mesma. Desta forma, chegamos a mais um modelo que satisfaz a propriedade. Chamemos este conjunto de mudanças obtido de $X_2$. 
+
+Apresentamos, na figura \ref{fig:modelosrefinados}, os modelos obtidos após a aplicação do algoritmo de refinamento sobre o KMTS M e a fórmula da figura \ref{fig:exalgs}. O algoritmo retorna três modelos que satisfazem a propriedade requerida. Os modelos $K_1$ e $K_2$, são obtidos, respectivamente, ao tomarmos o conjunto de mudanças $X_1$ e $X_2$. O modelo $X_3$ é obtido tomando-se as testemunhas $(C_{13}, \;C_{14}), \;(C_{15},C_{12})$ e $(C_{15},C_{16})$ o que leva a aplicarmos, respectivamente, as seguintes mudanças sobre o KMTS M: definição do átomo $m$ ao estado $s_1$, remoção da transição \textit{may} $(s_1,s_1)$ e remoção da transição \textit{may} $(s_1,s_0)$. 
+
+\begin{figure}[htb]
+\begin{center}
+%\resizebox{!}{6.5cm}{%
+ \begin{tikzpicture}[scale=0.95,->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, every node/.style={circle,fill=blue!18,draw,minimum size=2.5em, font=\sffamily\small\bfseries}]
+
+
+\node[ label=120:$s_0$ ] (0) { $ m $ };
+\node[ label=160:$s_1$ , below of=0] (1) { $ \neg m $ };
+
+\draw (0) to[bend right] (1);
+\draw[dashed] (1) to[loop below] (1);
+%\draw[dashed] (1) to[bend right] (0);
+
+\node[ label=120:$s_0$, right of=0, xshift=1cm ] (10) { $ m $ };
+\node[ label=160:$s_1$ , below of=10] (11) { $ \neg m $ };
+
+\draw (10) to[bend right] (11);
+%\draw[dashed] (11) to[loop below] (11);
+%\draw[dashed] (1) to[bend right] (0);
+
+\node[ label=120:$s_0$, right of=10, xshift=1cm ] (20) { $ m $ };
+\node[ label=160:$s_1$ , below of=20] (21) { $ m $ };
+
+\draw (20) to[bend right] (21);
+
+\node[fit={($(0.north west)+(-1cm,0.5cm)$) ($(0.north east)+(1cm,0)$) ($(1.south west)+(0,-1cm)$) ($(1.south east)+(-1cm,0)$)},draw, rectangle, fill = none,dashed,label=110:$X_1$:] {};
+
+\node[fit={($(10.north west)+(-1cm,0.5cm)$) ($(10.north east)+(1cm,0)$) ($(11.south west)+(0,-1cm)$) ($(11.south east)+(-1cm,0)$)},draw, rectangle, fill = none,dashed,label=110:$X_2$:] {};
+
+\node[fit={($(20.north west)+(-1cm,0.5cm)$) ($(20.north east)+(1cm,0)$) ($(21.south west)+(0,-1cm)$) ($(21.south east)+(-1cm,0)$)},draw, rectangle, fill = none,dashed,label=110:$X_3$:] {};
+
+\end{tikzpicture}
+%}
+\end{center}
+\centering \caption[Modelos obtidos após refinamento do modelo M e Fórmula $\phi$ da figura \ref{fig:ex_kmts}]{Modelos obtidos após refinamento do modelo M e fórmula $\varphi$ da figura \ref{fig:exalgs}.}
+\label{fig:modelosrefinados}
+\end{figure}
+
+
+Faremos agora uma comparação entre $X_1$ e $X_2$ a fim de mostrar que o algoritmo, de fato, não obedece ao critério de mudança mínima. Cada $X_i = \{P_1, \; P_2, \; P_3, \; P_4, \; P_5\}$ é expresso como um conjunto de operações $P_j$, onde $1 \leq j \leq 5$, e cada $P_j$ é um conjunto de mudanças referente a uma das cinco operações primitivas que podem ser aplicadas sobre um KMTS. Assim, temos que $X_1= \{ \; \{ \; (s_1,s_0) \;\}, \;  \emptyset, \; \emptyset, \; \emptyset, \; \{ (s_1 , \neg m)\} \}$ e $X_2 = \{ \; \{ \; (s_1,s_1), \; (s_1,s_0) \;\}, \;  \emptyset, \; \emptyset, \; \emptyset, \; \{ (s_1 , \neg m)\} \;\} $. Como o conjunto $P_1$ de $X_2$ está contido no conjunto $P_1$ de $X_1$ e cada conjunto $P_k$, com $ 2 \leq k \leq 5 $, em $X_1$ é igual ao outro conjunto $P_k$ em $X_2$, então de acordo com o critério de minimalidade estabelecido, $X_1 \subset X_2$ e como consequência $X_2$ não é minimal. 
+
+Este algoritmo consiste em achar um conjunto de permutações sobre as testemunhas de falha e aplicar cada mudança obtida, através do tratamento de cada testemunha, sobre o KMTS original, gerando novos KMTSs que satisfazem a propriedade. No entanto, o mesmo não traz somente os modelos minimais, podendo trazer, até mesmo, modelos repetidos. Dado um conjunto de $n$ testemunhas, então o algoritmo computa todas as combinações possíveis, percorrendo todos os caminhos da árvore de busca. Desta forma, por se tratar de um algoritmo de \textit{backtracking} que varre todo o espaço e busca, realizando todas as permutações possíveis entre as testemunhas de falhas, o algoritmo em questão tem uma complexidade exponencial.
+%por se tratar de um algoritmo de \textit{backtracking} que considera todo o espaço de busca, gerado por todas as combinações possíveis, acreditamos que, no pior caso, o mesmo seja $\Theta$(n$^{\textnormal{n} }$). Contudo, uma análise mais aprofundada da complexidade deve ser feita.
+
+\section{Implementação}
+\label{sec:implementacao}
+
+Devido ao fato do algoritmo apresentar um comportamento exponencial, e portanto desprender um alto custo computacional, decidimos que uma linguagem adequada para a implementação seria C/C++. Uma vez que a mesma é uma linguagem compilada e de rápida execução. 
+
+Como já informado no inicio do capítulo, o algoritmo proposto é especificado em um alto nível de abstração. Por isso, foi necessário considerar e especificar estruturas de dados para os modelos, fórmulas, construção da arena, entre outros. Foi necessário, também, pesquisar e implementar um algoritmo de verificação de modelos para lógica de três valores, uma vez que os autores em sua especificação apenas consideram a existência de algum algoritmo de verificação e fazem a sua chamada. Esta pesquisa levou a busca de outros algoritmos como o da divisão de um grafo direcionado em suas CFCM. Tratamos a seguir de cada um destes tópicos.
+
+\subsection{Estrutura do Algoritmo}
+
+O algoritmo é dividido em dois módulos: um de leitura e escrita e um segundo com a lógica de verificação e refinamento de modelos. 
+
+O modulo de leitura e escrita consiste em ler a especificação CTL e um modelo KMTS para realizar a verificação de modelos e, caso necessário, o refinamento. Tratamos dos formatos de entrada e saída deste módulo na seção \ref{sec:asptec}. Após a leitura dos mesmos, a fórmula é transformada em sua árvore de sub-fórmulas. Em posse do modelo lido, da árvore de sub-fórmulas, considerando as regras do jogo, construímos recursivamente a arena do jogo. 
+
+Após esta fase, foi necessário pesquisar um algoritmo para realizar a verificação de modelos com lógica de três valores. Duas soluções foram encontradas. A primeira consistia em reduzir o problema da verificação de modelos com lógica de três valores em um jogo de paridade e então aplicar algum algoritmo deste para resolver o problema, como proposto em \cite{grumberglosing}. No entanto, os algoritmos para estes jogos revelaram-se bastante complexos e como estamos interessados somente em um subproblema que pode ser resolvido por eles (um jogo de paridade suficiente para a lógica CTL), resolvemos considerar outras possibilidades. A segunda alternativa, surgiu com o algoritmo de verificação de modelos CTL com lógica de três valores proposto em \cite{grumbergalg}. Contudo, este algoritmo considera a sintaxe da CTL, enquanto que o algoritmo de refinamento de \cite{aline} consiste em reparar uma arena utilizando a sintaxe de $\mu$-calculus. Neste contexto, foi necessário adaptar as regras do algoritmo para CTL para que o mesmo funcione sobre a arena do jogo com sintaxe para $\mu$-calculus. Isto foi possível, pois apesar dos autores trabalharem com a sintaxe do $\mu$-calculus, os mesmos estavam interessados somente em especificações CTL. Apresentamos a adaptação deste algoritmo no capítulo \ref{cap:verificacaodemodelos}.
+
+Como já explicado, o algoritmo de verificação consiste em dividir a arena em suas CFCMs. Desta forma, foi necessário pesquisar também um algoritmo para tal tarefa. Dois algoritmos foram encontrados: Roy \cite{grafosRoy} e Tarjan \cite{tarjan}. O primeiro tem complexidade $O$(v$^2$), enquanto o segundo tem complexidade $O$($\vert$v$\vert$ + $\vert$E$\vert$), onde v é o número de vértices do grafo e E o número de arestas do grafo. Desta forma, optamos por implementar o algoritmo de Tarjan, visto que este tem complexidade linear.
+
+Após a divisão da arena do jogo em suas CFCMs, o algoritmo de coloração é aplicado sobre o mesmo de forma ascendente. Para a coloração e a propagação da mesma utilizamos uma pilha como proposto por \cite{grumbergalg}. Toda vez que uma configuração de uma CFCM é colorida, a mesma é colocada em uma pilha de nós coloridos. Ao final da coloração da CFCM em questão, o algoritmo utiliza a pilha para aplicar a propagação de coloração para os nós pais destas configurações. Se estes já estão coloridos, então é suficiente adicioná-los a pilha. A propagação acaba somente quando a pilha está vazia. Neste ponto, tomamos a próxima CFCM e reaplicamos todo o procedimento até que toda a arena esteja colorida. De acordo com \cite{grumbergalg}, o algoritmo de coloração tem complexidade $O \;(\vert \; M \;\vert \; \cdot \; \vert \; \varphi \; \vert$), ao considerarmos uma pilha para a  propagação da coloração e colorir as CFCM de forma ascendente.
+
+
+
+
+\subsection{Aspectos Técnicos}
+\label{sec:asptec}
+
+No módulo de leitura e escrita, foram utilizados o analisador léxico flex 2.5.37 \cite{flex} para a leitura das fórmulas e do modelo KMTS e o BisonC++ 4.05 \cite{bison} para realizar a análise sintática dos mesmos. O formato de entrada consiste em receber na primeira linha uma fórmula CTL (utilizando a sintaxe de $\mu$-calculos) e nas linhas subsequentes a descrição do KMTS.
+
+A leitura considera as seguinte convenções: uma proposição é sempre representada por um caractere minúsculo, as variáveis são identificadas por um caractere maiúsculo; os caracteres \textit{v} e \textit{u} são reservados para representar, respectivamente, o símbolo de maior ponto fixo e menor ponto fixo, a negação é representada pela palavra reservada \textit{not}, enquanto os operadores lógicos de conjunção e disjunção são representados, respectivamente, pelas palavras reservadas \textit{and} e \textit{or}. %A definição dos \textit{tokens} da linguagens e da gramática de entrada podem ser encontradas no apêndice. 
+
+A descrição do modelo consiste em um conjunto de descrição dos estados e um conjunto de descrição das transições existentes. Primeiro, entra-se com estados: um rótulo para o estado que deve ser único para cada um, seguido dos literais que ocorrem no estado separado por espaços. Um rótulo é identificado por um número seguindo por um sequencia de letras e números. As linhas que descrevem as transições obedecem o seguinte formato: um par de rótulos informando a transição seguido ou do simbolo `$+$' indicando que se trata de um transição \textit{must} ou um `$-$' indicando que a transição em questão é \textit{may}. Apresentamos abaixo a gramática do padrão de entrada.
+
+O modelo representado por um conjunto de estados onde cada um deles contém um rótulo de identificação e ponteiros para os outros modelos, estes ponteiros são acompanhados de uma variável que indica se a transição é \textit{may} genuína ou \textit{must}. 
+
+$ INICIO :: FORM \; ESTADOS \; TRANSICOES$
+
+$ FORM :: LITERAL \; \vert \; VARIAVEL \; \vert \; FORM \; \vert \; FORM \; and \; FORM \; \vert \; FORM \; or \; FORM $
+
+$FORM :: ( \; FORM \; ) \vert \; u \; VARIAVEL \; PONTO \; ( \; FORM\;) \vert \; v \; VARIAVEL \; PONTO \; ( \; FORM\;) $
+
+$FORM :: EX \; FORM \; \vert \; AX \; FORM \; \vert \; not \; LITERAL$
+
+$ESTADOS :: EST \; ESTADOS \; \vert \; EST$
+
+$EST :: ROTULO \; ( \; LISTL \; )$
+
+$LISTL :: LITNEG \; LISTL \; \vert \; \epsilon$
+
+$LITNEG :: LITERAL \; \vert \; NOT \; LITERAL$
+
+$TRANSICOES :: TRANS \; TRANSICOES \; \vert \; \epsilon$
+
+$TRANS :: ( \; ROTULO \; VIRG \; ROTULO \; ) \; DBPONTO \;  + \;$
+
+$TRANS :: \; ( \; ROTULO \; VIRG \; ROTULO \; ) \; DBPONTO \;  -$
+
+
+Na gramática acima, o não terminal \textit{PONTO} indica o caractere `.' e \textit{DBPONTO} denota o caractere `:'. Preferimos expressá-los desta forma na gramática para garantir a legibilidade desta e não gerar dúvidas quanto a ocorrência dos símbolos. Os não terminais \textit{LITERAL} e \textit{VARIAVEL}, como sugerem, indicam a ocorrência de um literal e de uma variável, respectivamente. \textit{ROTULO} indica a assinatura do rótulo para um estado. A formação dos mesmos já fora explicada no parágrafo anterior. EX e AX são palavras reservadas e indicam os conectivos existe um próximo estado e para todo próximo estado, respectivamente. O simbolo $\epsilon$ denota a cadeia vazia.
+
+A saída do programa consiste na escrita de todos os modelos KMTS obtidos após a execução do algoritmo. Os modelos são escritos seguindo o mesmo padrão de entrada, com exceção da escrita da fórmula CTL. %Apresentamos um exemplo de entrada e saída na figura \ref{fig:exSaida} do apêndice A. A figura \ref{fig:sub2} apresenta o formato de entrada para a fórmula e modelo apresentados na figura \ref{fig:ex3valores} e a figura \ref{fig:sub1} apresenta a saída obtida após a execução do algoritmo implementado.
+
+À medida que prosseguimos com a implementação, testes foram feitos a fim de se verificar o correto funcionamento do algoritmo. O algoritmo foi desenvolvido em diversos estágios, e o estágio subsequente só era alcançado quando passava pelos testes; sendo realizadas, sempre que necessário suas devidas correções. Uma validação formal para o algoritmo será feita em trabalhos futuros. 
+
+
+\section{Otimização do Algoritmo}
+\label{sec:otimizacao}
+
+Tratamos nesta seção sobre algumas considerações que podem ser aplicadas sobre o algoritmo a fim de otimizá-lo em alguns aspectos.
+
+
+\subsection{Remoção de Modelos Repetidos}
+
+O algoritmo de refinamento pode retornar modelos repetidos. A fim de de tratar este problema, consideramos duas abordagens. A primeira consiste em tomar todos os conjuntos de mudanças obtidos ao final da execução do algoritmo e eliminar os conjuntos repetidos. Esta abordagem, no entanto, não é eficiente, visto que neste caso devemos comparar o conjunto de mudanças dois a dois, o que nos leva a um algoritmo exponencial.%Supondo um algoritmo (possivelmente inexistente), onde a comparação entre dois modelos no melhor pior caso fosse $O$(1), teríamos ao final da execução um algoritmo com complexidade de $O$(n$^2$), visto que comparamos cada modelo do conjunto dois a dois.
+%No entanto, comparar dois modelos é equivalente a verificar se dois grafos são isomorfos e os algoritmos presentes para este problema são todos exponenciais. Por demandar um alto custo computacional, decidimos desconsiderar esta abordagem. 
+
+Como alternativa, sugerimos algumas heurísticas a fim de podar a árvore de busca, evitando assim combinações repetidas de testemunhas. A heurística consiste em tomar em cada estado da recursão todas as testemunhas já consideradas por este caminho na árvore de busca, deixando-as visíveis para os estados subsequentes. Se após a recoloração da arena, uma testemunha de falha já considerada por este caminho de busca aparecer, a mesma deverá ser descartada evitando assim que surjam combinações repetidas de testemunhas, e consequentemente de modelos. Uma vez que uma testemunha de falha tenha sido considerada, gerando assim um caminho na árvore de recursão, não devemos considerá-la nos próximos caminhos gerados a partir de outras testemunhas tomadas neste mesmo estado. Ou seja, se uma testemunha $T_i$ em um estado da árvore de recursão já foi considerada e agora o algoritmo volta a este estado considerando uma outra testemunha, a fim de obter outro caminho da árvore de busca (consequentemente, uma outra combinação), todas as sub-árvores geradas a partir das outras testemunhas devem descartar todas as outras testemunhas consideradas anteriormente. Argumentamos, que as testemunhas não devem ser comparadas como meras arestas. Ou seja, duas testemunhas $(C_1,C_2)$ e $(C_3,C_4)$, apesar de representarem na arena do jogo, arestas diferentes, podem ser iguais. A função de comparação aqui tomada entre duas testemunhas deve ser baseada na aplicação de alteração que a mesma gera sobre o modelo ao ser tratada. Explicaremos melhor esta função de comparação tomando o exemplo a seguir.
+
+Consideremos o modelo e fórmula utilizados para a construção da arena da figura \ref{fig:exalgs}. Podemos observar que algumas destas testemunhas de falhas quando consideradas geram a mesma modificação sobre o modelo. As testemunhas $ (C_6,C_3)$ e $(C_{15},C_{12})$ designam  a alteração $P_1=(s_1,s_1)$;   $ (C_6,C_7)$ e $(C_{15},C_{16})$ designam a operação $P_1=(s_1,s_0)$. As testemunhas $(C_4,C_5)$ e $(C_{13},C_{14})$ afetam o modelo de forma diferente. Agrupemos então as testemunhas equivalentes em um conjunto $T_i$, como segue: $T_0 = \{ (C_6,C_3), \;(C_{15},C_{12}) \}$, $T_1 = \{ (C_6,C_7), \;(C_{15},C_{16}) \}$, $T_2 = \{ (C_{13},C_{14}) \}$ e $T_3= \{ (C_4,C_5)\}$. O algoritmo é executado de forma recursiva, criando uma árvore de busca, utilizando a estratégia de \textit{backtracking}.
+
+\begin{figure}[htb]
+\begin{center}
+\resizebox{!}{6cm}{%
+\tikzset {main node/.style = {rectangle, solid,draw, fill=blue!18, align=center},
+eva/.style = {ellipse, solid,draw, fill=blue!18, align=center},
+any/.style={draw,shape=rectangle}
+}
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, level/.style={rectangle,draw, fill=blue!18,draw,font=\sffamily\small\bfseries,sibling distance = 3cm,
+  level 2/.style={sibling distance=1cm},
+    level 5/.style={sibling distance=4cm},
+%        level 5/.style={sibling distance=4.2cm},
+%       level 7/.style={sibling distance=6cm},
+  level distance = 2cm}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+\node [main node, label=180:$A_0$] (0){$ T_0, \; T_1, \; T_2, \; T_3$ }
+  child {node [main node, label=180:$A_1$] (1) {$  T_1, \; T_2, \; T_3$ } 
+  	child {node [main node, label=180:$A_2$] (0_1) {$   T_2, \; T_3$ }
+	  	child {node [main node, label=180:$A_3$] (0_1_2) {$  \top$ } 
+  		}
+  		child {node [main node, label=180:$A_4$] (0_1_3) {$ \top$ } 
+  		}		 
+  	}		
+  }
+  child {node [main node, label=180:$A_5$] (2) {$  \; T_2, \;T_3$ }
+  	child {node [main node, label=180:$A_6$] (1_2) {$  \times$ } 
+  	}
+  	child {node [main node, label=0:$A_7$] (1_3) {$ \top$ } 
+  	}	 
+  } 
+  child {node [main node, label=180:$A_8$] (3) {$  \times$ } 
+  }
+  child {node [main node, label=180:$A_8$] (4) {$  \times$ }  
+  }  
+  ; 	 	
+
+
+\draw[draw=none] (0) to node [left,xshift=-2mm]{$T_0$} (1);
+\draw[draw=none] (0) to node [left,xshift=-1mm]{$T_1$} (2);
+\draw[draw=none] (0) to node [left,xshift=-1mm]{$T_2$} (3);
+\draw[draw=none] (0) to node [left,xshift=-1mm]{$T_3$} (4);
+\draw[draw=none] (1) to node [left,xshift=-1mm]{$T_1$} (0_1);
+\draw[draw=none] (0_1) to node [left,xshift=-1mm]{$T_2$} (0_1_2);
+\draw[draw=none] (0_1) to node [left,xshift=-1mm]{$T_3$} (0_1_3);
+\draw[draw=none] (2) to node [left,xshift=-1mm]{$T_2$} (1_2);
+\draw[draw=none] (2) to node [right]{$T_3$} (1_3);
+
+;
+\end{tikzpicture}
+}
+\end{center}
+
+ \caption[Arvore de Recursão com heurística]{ Arvore de recursão do algoritmo de refinamento com heurística para o modelo e fórmulas especificadas na figura \ref{fig:exalgs}.  }
+\label{fig:arvorebuscaMenor}
+\end{figure}
+
+Na figura \ref{fig:arvorebuscaMenor}, cada nó é identificado por $A_i$, onde $i \in  \mathbb{N}$. Os nós terminais marcados com $\top$ ou $\times$, indicam, respectivamente, caminhos onde foi possível gerar um modelo que satisfaz à propriedade especificada e caminhos por onde o algoritmo não pode prosseguir, evitando a geração de modelos repetidos. Cada estado apresenta os conjuntos de equivalência das testemunhas que podem ser tomados a fim de reparar o modelo. No estado principal $A_0$, todas as testemunhas podem ser consideradas. Tomamos primeiro o conjunto de equivalência $T_0$, alcançando o estado $A_1$ e a partir deste ponto escolhendo $T_2$ e $T_3$ por caminhos diferentes, alcançando dois modelos que satisfazem a especificação.  Ao voltarmos ao estado $A_0$, devemos escolher outro conjunto de equivalência, seguindo a ordem, escolhemos $T_1$, alcançando o estado $A_5$. Podemos observar neste estado que o conjunto $T_0$, apesar de ocorrer na arena recolorida, não é considerado. Isso se deve ao fato de $T_0$ ter sido considerado por um caminho anterior, sendo assim, o mesmo deve ser descartado, a fim de desconsiderar combinações repetidas. Neste estado, as testemunhas $T_2$ e $T_3$ podem ser escolhidas. A escolha de $T_3$ gera mais um modelo, enquanto a escolha de $T_2$  leva a um estado onde mais nenhuma testemunha pode ser considerada. O algoritmo retorna ao estado anterior, ou seja, $A_0$. A partir deste ponto, mais nenhum modelo será gerado. Todos os caminhos alcançam estados finais onde mais nenhum conjunto pode ser considerado. Vale observar que no estado $A_6$ se considerássemos $T_0$, geraríamos o mesmo modelo obtido pelo caminho $A_0A_1A_2A_3$. A heurística utilizada evita seguirmos por caminhos que nos leve a modelos repetidos. Com isso, reduzimos o espaço de busca e consequentemente o tempo de processamento.
+
+Deixamos a implementação destas heurísticas sobre o algoritmo para trabalhos futuros.
+%Esta heurística não foi implementada por dois motivos. Primeiro, uma estrutura de dados mais robusta precisaria ser especificada com o objetivo de alcançar e representar as testemunhas equivalentes. Segundo, o algoritmo proposto por \cite{aline} precisaria ser modificado a fim de incorporar tal heurística, estas modificações demandariam muito tempo e um esforço maior de projeto, uma vez que as próprias rotinas definidas pelos autores deveriam ser alteradas. 
+
+
+\subsection{Recoloração Seletiva}
+
+
+Durante o refinamento, a  cada estado da recursão uma mudança é aplicada sobre o modelo e  a arena modificado a fim de refletir a mudança. Desta forma, a arena deve ser recolorida, a fim de se obter o resultado da verificação de modelos com lógica de três valores após tal modificação. Esse processo é executado recursivamente até que se obtenha um modelo que satisfaça a fórmula e se repete por todos os caminhos da árvore de busca. Podemos observar aqui que o algoritmo de verificação de modelos é chamado em todos os passos da recursão e a arena é recolorida por completo. No entanto, apenas algumas configurações da arena tem de fato sua cor alterada em cada passo da recursão. Desta forma, uma recoloração seletiva da arena, poderia tornar o processo de refinamento mais rápido.
+
+Argumentamos nesta seção, que a arena pode, de fato, se recolorida de forma seletiva e apresentamos quais as configurações que devem ser recoloridas na arena, evitando a recoloração completa da mesma. 
+
+%Devemos, antes de considerarmos as mudanças aplicadas sobre a arena, fazer algumas considerações sobre as configurações coloridas com $\perp$ ou $\top$. 
+Se uma configuração qualquer da arena tem cor $\top$ ou $F$, então o jogador desta configuração, ou tem estratégia de ganhar ou de perder. Neste último caso, todos os nós filhos estão coloridos com $\top$ ou $F$; ou ainda pode existir transições \textit{may} genuínas por onde o mesmo não tem estratégia de não perder. Neste caso, o nó filho conectado a esta configuração pela aresta \textit{may} deverá também ter cor $\top$ ou $F$, coso contrário, o configuração em questão teria estratégia de não perder. 
+
+Caso a configuração esteja colorida com $\perp$, então a mesma tem estratégia de não perder dependente de algum nó filho. Consideremos uma configuração qualquer colorida com $\perp$. Assim, dois casos podem ocorrer. Ou a configuração em questão é uma configuração terminal da forma $(s_i,l)$, onde o $l$ é um literal e o mesmo não ocorre no estado $s_i$ do modelo. Ou existe necessariamente, pelo menos, um nó filho colorido com $\perp$ por onde o jogador desta configuração joga para não perder, ou um nó filho colorido com uma das três cores, sendo a aresta que os conecta do tipo \textit{may} genuína. 
+
+Sempre que aplicamos uma mudança sobre o modelo, esta alteração se reflete na arena, alterando a princípio algumas configurações da mesma. Dada uma testemunha de falha $(m,n)$, onde $m$ tem sempre cor $\perp$, a depender do tipo da testemunha três alterações diferentes podem ser aplicadas sobre o modelo: $P_1, \; P_3$ e $P_5$. Para cada um delas, uma alteração é feita sobre a arena. Verificaremos a partir daqui estas operações e as modificações que as mesmas ocasionam na arena.
+
+A operação $P_1$ remove do estado uma transição $(s_i,s_j)$ \textit{may} genuína do modelo, consequentemente todas as arestas $(s_1,s_j)$ serão também removidas da arena do jogo. Logo, duas configurações quaisquer $C_1 = (s_1,\varphi)$ e $C_2 = (s_j,\varphi)$ da arena serão desconectadas. Vale ressaltar que como tratamos de uma transição \textit{may} genuína somente configuração da forma $C = (s, AX \varphi)$ e $C = (s, EX \varphi)$ terão as arestas removidas devido a aplicação da operação, uma vez que as mesmas são as únicas que refletem as transições do modelo. Devemos agora, considerar o impacto desta alteração sobre a arena. % Dois casos podem ocorrer: a configuração $C1=(s_i,\varphi)$ está colorida com $\top$, $F$ ou $\perp$. 
+Se a configuração está colorida com $\top$ ou $F$ então a mesma ou tem estratégia de ganhar ou não tem estratégia de ganhar independente da aresta removida, caso contrário a mesma estaria colorida com $\perp$. Assim a remoção da aresta não altera a coloração da configuração, consequentemente não existe propagação ascendente a partir da mesma. Devemos ainda considerar o fato das configurações coloridas com $\perp$. Neste caso, a remoção poderá ou não alterar a coloração da configuração em questão, podendo propagar a coloração de forma ascendente.
+
+A operação $P_3$ consiste em transformar uma transição $(s_i,s_j)$ em uma transição \textit{must}. Pelos mesmos motivos acima explicados somente as configurações do tipo $AX$ e $EX$ sofrerão modificação direta devido a aplicação desta mudança. Os casos de recoloração e propagação são os mesmos aplicados à operação $P_1$.
+
+A operação $P_5$ consiste em atribuir a um estado $s_i$ do modelo um literal $l$ a este. Desta forma, configurações terminais da forma $(s_i, l)$ ou $(s_i, \neg l)$ serão recoloridas. Vale ressaltar que todas estas configurações antes da aplicação da operação $P_5$ tinham cor $\perp$ visto que o literal em questão e o seu complementar estão indefinidos no estado $s_i$.
+
+Considerando estas observações, podemos concluir que a aplicação das operações afeta diretamente apenas três tipos de configurações: configurações da forma $AX$ ou $EX$; e configurações terminais com literais indefinidos. Estas configurações são recoloridas, podendo ou não propagar a recoloração para as configurações ascendentes.
+
+As configurações da forma $AX$ e $EX$, se sofrem com a aplicação da operação $P_1$ ou $P_3$, então uma das seguintes situações ocorre. A configuração tem cor $\top$ ou $F$, desta forma o jogador da configuração em questão tem estratégia de ganhar ou não a tem independente da alteração feita. Pois, se tem tal cor, ou perde por todas as suas transições ou tem estratégia de ganhar. Para este último caso, ele necessariamente deve jogar por uma transição \textit{must}. Caso tenha cor $\perp$ então o jogador desta configuração tem uma ou mais estratégias de não perder nesta configuração. Neste caso a alteração ou não afeta a coloração, o que implica em o jogador ter outra estratégia de não perder independente desta transição; ou a configuração passa a ter coloração $\top$ ou $F$. Neste caso, a coloração poderá ser propagada ascendentemente. 
+
+Para a operação $P_5$ somente as configurações terminais serão alteradas diretamente, tendo sua cor alterada para $\top$ ou $\perp$. Propagando então a coloração para as configurações ascendentes.
+
+Observamos que apenas configurações coloridas com $\perp$ são afetadas diretamente após a aplicação de uma das três operações. Podendo então propagar a coloração. Podemos, concluir que somente configurações coloridas com $\perp$ serão recoloridas. Pois, se uma configuração está colorida com $\perp$ e um dos seus filhos é afetado pela propagação da coloração ou pela aplicação direta de uma das operações, então, dependendo da cor atribuída ao nó filho, a configuração em questão poderá mudar para a mesma cor. Se uma configuração sofre alteração de cor, e um de seus nós pais tem cor $\top$ ou $F$, então este tem estratégia de ganhar independente da configuração recolorida. 
+
+Concluímos, desta forma, que  somente as configurações coloridas com $\perp$ seriam recoloridas. Devemos aplicar a recoloração às configurações que sofrem alteração direta da operação aplicada e propagar estas coloração ascendentemente. Assim, não precisamos recolorir toda a arena, diminuindo consideravelmente o tempo de processamento.
+
+
+Para a recoloração seletiva é necessário considerar estruturas de dados para ligar as testemunhas equivalentes e modificar o algoritmo de coloração para funcionar junto ao algoritmo de refinamento. Vale ressaltar que uma estratégia de recuperação das cores das configurações indefinidas também deve ser considerada, para quando voltarmos um passo da recursão e considerarmos outra testemunha. Copiar a arena e aplicar a coloração não justifica todo o esforço para recolorir seletivamente, visto que o tempo gasto em cópia é igual ao de colorir uma arena nova. A recoloração seletiva da arena será implementada em trabalhos futuros.%Assim, não implementamos tal melhoria devido a falta de tempo hábil e da alta complexidade envolvida para a implementação da mesma.
+
+
+\subsection{Verificação e Refinamento de Modelos para Fórmulas Insatisfazíveis}
+
+O algoritmo de verificação de modelos para lógica de três valores pode retornar indefinido quando a propriedade específica é insatisfazível. No entanto, devido ao fato da fórmula ser inconsistente, o algoritmo de refinamento não retornará nenhum modelo. Apesar do algoritmo de verificação de modelos, não resultar em falso quando a fórmula for insatisfazível, a combinação do mesmo com o algoritmo de refinamento proposto é capaz de informar tal resultado.
+
+Tomemos como exemplo a fórmula CTL $ (EX m) \wedge (AX \neg m)$ insatisfazível. Apresentamos na figura \ref{fig:exinsat} um modelo KMTS e a arena colorida gerada pelo algoritmo de verificação de modelos.
+
+\begin{figure}[htb]
+\begin{center}
+%\resizebox{!}{6cm}{%
+\tikzset {main node/.style = {rectangle, solid,draw, fill=blue!18, align=center},
+eva/.style = {ellipse, solid,draw, fill=blue!18, align=center},
+any/.style={draw,shape=rectangle}
+}
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick, level/.style={rectangle,draw, fill=blue!18,draw,font=\sffamily\small\bfseries,sibling distance = 3cm,
+  level 1/.style={sibling distance=4cm},
+    level 5/.style={sibling distance=4cm},
+%        level 5/.style={sibling distance=4.2cm},
+%       level 7/.style={sibling distance=6cm},
+  level distance = 2cm}]
+  
+%\node[ visible node, label=120:$s_0$ ] (0) { $ n_1 , n_2$ };
+\node [main node, label=180:$C_0$] (0){$ s_0 \vdash (EX m) \wedge (AX \neg m) \; (\perp)$ }
+  child {node [eva, label=180:$C_1$] (1) {$  s_0 \vdash EX m \; (\perp)$ } 
+  	child {node [eva, label=180:$C_2$] (2) {$  s_0 \vdash m \; (\top)$ } edge from parent[dashed]
+  	}
+  }  
+  child {node [main node, label=180:$C_3$] (3) {$  s_0 \vdash AX \neg m \; (\perp)$ }
+    	child {node [eva, label=180:$C_4$] (4) {$  s_0 \vdash \neg m \; (F)$ } edge from parent [dashed]
+  	}
+  }
+  
+  ;
+  
+  
+\node [right of=0,circle, xshift = 4cm,label=160:$s_0$,draw,fill=blue!18,minimum size=2.5em] (s0) {$m$};
+\draw[dashed] (s0) to[loop above] (s0);
+
+\node[fit={(s0) ($(s0.north)+(0,1cm)$) ($(s0.north)+(-1cm,0)$)},draw, dashed,label=110:M:] {};
+%\draw ($(12.north west)+(5.5cm,5cm)$) node[circle,draw, fill=blue!18,label=120:$s_0$,minimum size=2.5em] (s0) {m};
+
+;
+\end{tikzpicture}
+%}
+\end{center}
+\caption[Verificação de modelos para fórmula insatisfazível]{Verificação de modelos para fórmula insatisfazível $ \varphi \equiv (EX m) \wedge (AX \neg m) $ e KMTS $M$.}
+\label{fig:exinsat}
+\end{figure}
+
+Considerando a testemunha $(C_1,C_2)$, transformamos a transição $(s_0,s_0)$ em \textit{must}. Assim, a testemunha $(C_3,C_4)$ também é alterada sendo transformada em aresta \textit{must}. Logo, a configuração $C_1$ é colorida com $\top$ e $C_3$ com $\perp$, consequentemente $C_0$ é colorido com $F$. O que é esperado, visto que a fórmula não aceita nenhum modelo. Se considerarmos a testemunha $(C_3, C_4)$, a aresta $(s_0,s_0)$ do modelo será removida. Sendo assim, $C_1$ será colorida com $F$ e $C_3$ com $\top$, consequentemente $C_0$ outra vez será colorido com $F$. Dessa forma, o algoritmo não encontra nenhum modelo que satisfaça a fórmula $\varphi$, como esperado.
+
+%A rotina inicial é a de revisão de jogo. 
+
+
+%Em posse destas testemunhas,  considerando uma ordem qualquer das mesmas, o algoritmo chama a rotina refinar jogo passando a lista de testemunhas. Esta chamada é feita n vezes, dentro de um laço de repetição, onde n é o número de testemunhas de falhas. Ao final de cada iteração, espera-se obter um modelo KMTS refinado 
+
+\chapter{Conclusão}
+\label{cap:conclusao}
+%
+%Estruturas de Kripke podem ser utilizadas para capturar o comportamento de sistemas e serem utilizados para verificar propriedades comportamentais destes sistemas. Estas estruturas, no entanto, não são capazes de representar de forma explícita informação parcial.  A fim de lidar com este problema, pode-se utilizar modelos KMTS. Propomos neste trabalho uma implementação do algoritmo de refinamento de modelos KMTS proposto por \cite{aline}. 
+
+
+Implementamos neste trabalho o algoritmo de refinamento de modelos KMTS proposto por \cite{aline}. O algoritmo proposto pelos autores encontra-se em um alto nível de abstração, tendo sido necessário refiná-lo a fim de obter um algoritmo mais próximo de um linguagem de programação, permitindo assim a sua implementação. 
+
+Foi necessário pesquisar e implementar um algoritmo de verificação de modelos com três valores para CTL e adaptá-lo a fim de trabalhar com fórmulas CTL utilizando a sintaxe de $\mu$-calculus, uma vez que as testemunhas de falhas e as operações de modificações são tratadas sobre a arena de um jogo utilizando esta sintaxe. O algoritmo, de verificação de modelos baseado em jogos, implementado tem complexidade linear em função do número de configurações da arena.
+
+O algoritmo de refinamento KMTS proposto pelos autores tem complexidade exponencial, uma vez que a solução encontrada pelo mesmo é obtida pela permutação de todas as testemunhas de falhas da arena do jogo. Além disso, o algoritmo proposto não retorna os modelos minimais e considera modelos repetidos em seu conjunto de solução. 
+
+Apresentamos neste trabalho sugestões de melhorias do algoritmo como a aplicação de heurísticas sobre a árvore de recursão do algoritmo a fim de eliminar modelos repetidos e apresentamos também uma sugestão de recoloração seletiva da arena a cada passo da recursão evitando a recoloração completa da mesma. Não implementamos tais melhorias, devido ao fato do mesmo demandar um alto esforço de projeto, como considerações de estruturas de dados mais robustas e também por ser necessário considerar modificações nos algoritmos de refinamento e verificação de modelos, a fim de funcionarem com tais alterações.
+
+Uma análise da complexidade de tais sugestões ainda precisa ser feita. No entanto, acredita-se que a aplicação destas melhorias possam reduzir bastante o tempo de processamento do algoritmo. Apesar da verificação de modelos poder resultar em indefinido para fórmulas insatisfazíveis, a utilização do algoritmo de refinamento combinado é capaz de informar sobre a insatisfazibilidade da mesma.
+
+O algoritmo foi implementado utilizando C/C++, por se tratar de uma linguagem rápida e eficiente. O algoritmo implementado já pode ser utilizado para realizar verificações de modelos e refinamento do mesmo. As classes de verificação de modelos com lógica de três valores podem ser utilizadas em outros projetos, ou utilizá-las simplesmente para a verificação de modelos com lógica de três valores, uma vez que até o presente momento não foi encontrado nenhum algoritmo implementado utilizando lógica de três valores. 
+
+Como trabalho futuro, pretendemos implementar as melhorias aqui sugeridas e um algoritmo de refinamento para os modelos mínimos já encontra-se em análise. Pretendemos, também, realizar uma validação formal do algoritmo. %Bem como uma validação formal para o algoritmo implementado.
+
+%\chapter{Apêndice A}
+%
+%\begin{figure}[htb]
+%
+%\begin{subfigure}{.5\textwidth}
+% \includegraphics[width=.9 \linewidth]{imagens/exemplo_saida.jpg}
+%  \caption{Saída do algoritmo de refinamento de modelos para a entrada da figura \ref{fig:sub2}.}
+%  \label{fig:sub1}
+%\end{subfigure}%
+%\begin{subfigure}{.5\textwidth}
+%  \centering
+%  \includegraphics[width=.9\linewidth]{imagens/entradaent.jpg}
+%  \caption{Exemplo de entrada para o algoritmo considerando o  modelo KMTS e fórmula CTL apresentada na figura \ref{fig:ex3valores}.}
+%  \label{fig:sub2}
+%\end{subfigure}%
+
+%\begin{subfigure}
+%\centering \includegraphics[scale=0.5]{imagens/exemplo_saida.jpg}
+%\end{subfigure}
+%\centering \caption{Exemplo de entrada e saída do algoritmo implementado considerando o modelo KMTS e fórmula CTL da figura \ref{fig:ex3valores}.}
+%\label{fig:exSaida}
+%\end{figure}
+
+%\begin{figure}
+%\begin{lstlisting}[language=C++, frame=single]
+%#include <iostream>
+%using namespace std;
+%main()
+%{
+%cout << "Hello world \n";
+%return 0;
+%}
+%\end{lstlisting}
+%
+%\caption{Teste}
+%\end{figure}
+%\renewcommand\lstlistingname{Classe}
+%\lstinputlisting[language=C++, 
+%	frame=single,
+%	numbers=left,
+%	breaklines=true,
+%	captionpos=b,
+%	caption={Definição da classe Configuração.h}]
+%	{codigo/Configuracao.h}
+%	
+%\lstinputlisting[language=C++, 
+%	frame=single,
+%	numbers=left,
+%	breaklines=true,
+%	captionpos=b,
+%	caption={Definição da classe Configuração.h}]
+%	{codigo/Configuracao.cpp}
+
+
+\bibliographystyle{abnt-alf} 
+\bibliography{referencias}
+
+\end{document} % Fim do documento

@@ -1,174 +1,145 @@
-%% Template para dissertação/tese na classe UFBAthesis
-%% versão 0.9.2
-%% (c) 2005 Paulo G. S. Fonseca
-%% (c) 2012 Antonio Terceiro
-%% www.dcc.ufba.br/~terceiro/ufbathesis
-
-%% Carrega a classe ufbathesis
-%% Opções: * Idiomas
-%%           pt   - português (padrão)
-%%           en   - inglês
-%%         * Tipo do Texto
-%%           bsc  - para monografias de graduação
-%%           msc  - para dissertações de mestrado (padrão)
-%%           qual - exame de qualificação doutorado
-%%           prop - proposta de tese doutorado
-%%           phd  - para teses de doutorado
-%%         * Mídia
-%%           scr  - para versão eletrônica (PDF) / consulte o guia do usuario
-%%         * Estilo
-%%           classic - estilo original à la TAOCP (deprecated)
-%%           std     - novo estilo à la CUP (padrão)
-%%         * Paginação
-%%           oneside - para impressão em face única
-%%           twoside - para impressão em frente e verso (padrão)
-\documentclass[bsc, std, a4paper]{ufbathesis}
+%% Modelo ABNT 
+\documentclass[normaltoc,capchap,capsec,times]{abnt}
+\usepackage[hang,flushmargin]{footmisc} 
+\usepackage[brazil]{babel} % Idioma do documento
 \usepackage[utf8]{inputenc}
+\usepackage{abnt-alf}
+\usepackage[alf]{abntcite}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage[font=footnotesize]{caption,subcaption}
+\usepackage{chngcntr}
+\counterwithout{figure}{chapter}
+\usepackage{amsfonts}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{enumitem}
 
-%% Preâmbulo:
-%% coloque aqui o seu preâmbulo LaTeX, i.e., declaração de pacotes,
-%% (re)definições de macros, medidas, etc.
+\usepackage{tikz}
+\usetikzlibrary{backgrounds,fit,calc,shapes}
+\usetikzlibrary{arrows}
 
+\usepackage{pgfplots}
+\usepackage[acronym]{glossaries}
+\usepackage[paginas=nao]{tabela-simbolos}
+\usepackage{amsthm}
+\usepackage{url}
+
+\lstset{extendedchars=\true}
+
+\newtheorem{definition}{Definição}[section]
+\newtheorem{lemma}{Lema}[section]
+\newtheorem{theorem}{Teorema}[section]
+
+
+\makeindex
+
+%% Fim do Preâmbulo
+%% --------------------------------------------------------------------------------------
 %% Identificação:
 
-% Universidade
-% e.g. \university{Universidade de Campinas}
-% Na UFPE, comente a linha a seguir
-\university{Universidade Federal da Bahia}
-
-% Endereço (cidade)
-% e.g. \address{Campinas}
-% Na UFPE, comente a linha a seguir
-\address{Salvador}
-
-% Instituto ou Centro Acadêmico
-% e.g. \institute{Centro de Ciências Exatas e da Natureza}
-% Comente se não se aplicar
-\institute{Instituto de Matemática}
-
-% Nome da biblioteca - usado na ficha catalográfica
-% default: nome da biblioteca do Instituto de Matemática
-\library{<NOME DA BIBLIOTECA>}
-
-% Departamento acadêmico
-% e.g. \department{Departamento de Informática}
-% Comente se não se aplicar
-\department{Departamento de Ciência da Computação}
-
-% Programa de pós-graduação
-% e.g. \program{Pós-graduação em Ciência da Computação}
-\program{Trabalho de Conclusão de Curso}
-
-% Área de titulação
-% e.g. \majorfield{Ciência da Computação}
-\majorfield{Ciência da Computação}
-
-% Título da dissertação/tese
-% e.g. \title{Sobre a conjectura $P=NP$}
+% Título do Trabalho
 \title{Reparo de Modelos KMTS}
+\newcommand{\meutitulo}{Reparo de Modelos KMTS}
+
+\local{Salvador}
 
 % Data da defesa
-% e.g. \date{19 de fevereiro de 2003}
-\date{<DATA DA DEFESA>}
+\date{23 de Dezembro de 2014}
 
 % Autor
-% e.g. \author{José da Silva}
 \author{Pedro Dumont Marques}
 
-% Orientador(a)
-% Opção: [f] - para orientador do sexo feminino
-% e.g. \adviser[f]{Profa. Dra. Maria Santos}
-\adviser[f]{Profa. Dra. Aline Andrade}
+\comentario{Monografia apresentada ao Curso de
+graduação em Ciência da Computação,
+Departamento de Ciência da Computação,
+Instituto de Matemática, Universidade Federal
+da Bahia, como requisito parcial para
+obtenção do grau de Bacharel em Ciência da
+Computação. \\ Orientadora: Profª Drª. Aline Maria Santos Andrade.}
 
-% Orientador(a)
-% Opção: [f] - para orientador do sexo feminino
-% e.g. \coadviser{Prof. Dr. Pedro Pedreira}
-% Comente se não se aplicar
-%\coadviser{<NOME DO(DA) CO-ORIENTADOR(A)>}
+%% Capa:
+\let\oldteste\teste
+\let\oldcapa\capa
+\renewcommand{\capa}{
 
-%% Inicio do documento
-\begin{document}
+\begin{center}
+\includegraphics[width=0.2\textwidth,natwidth=610,natheight=642]{imagens/brasao_ufba.jpg}
+\\
+\centering{ 
+	\bf{
+	    \LARGE{
+			\uppercase{UNIVERSIDADE FEDERAL DA BAHIA} \\
+ 	    }
+	    \Large {
+          	\uppercase{INSTITUTO DE MATEMÁTICA} \\
+	    }
+    	\large {
+           	\uppercase{DEPARTAMENTO DE CIÊNCIA DA COMPUTAÇÃO} \\
+        }
+    }           
+}
+\end{center}
 
+\vfill
 
-% Folha de rosto
-%\dmccfrontpage{PMCC-Dsc-XXXX}
-% Se seu trabalho não for uma tese de doutorado do DMCC, apague a linha
-% acima e use \frontpage
-\frontpage
+\begin{center}
+    \bf{
+       \large{Pedro Dumont Marques  \\  }
+    }
+\end{center}
 
-%%
-%% Parte pré-textual
-%%
-\frontmatter
+\vspace{0.2in}
 
-% Portada (apresentação)
-%\dmccpresentationpage
-% Se seu trabalho não for uma tese de doutorado do DMCC, apague a linha
-% acima e use \presentationpage
-\presentationpage
+\begin{center}
+	\bf{
+       \LARGE{ \textit{ \meutitulo } } \\
+   	}
+\end{center}
 
-% Ficha catalográfica
-\authorcitationname{Marques, Pedro Dumont} % e.g. Terceiro, Antonio Soares de Azevedo
-\advisercitationname{Andrade, Aline} % e.g. Chavez, Christina von Flach Garcia
-%\coadvisercitationname{<NOME DO SEU CO-ORIENTADOR EM CITAÇÕES>} % e.g. Mendonca, Manoel Gomes de
-\catalogtype{Trabalho de Conclusão de Curso} % e.g. ``Tese (doutorado)''
-\catalogtopics{1. Métodos Formais. 2. Verificação de Modelos} % e.g. ``1. Complexidade Estrutural. 2. Engenharia de Software''
-\catalogcdd{<NUMERO CDD>} % e.g. ``CDD 20.ed. XXX.YY'' (esse número vai lhe ser dado pela biblioteca)
-\catalogingsheet
-
-% Termo de aprovação
-\approvalsheet{Salvador, <DIA> de <MÊS> de <ANO>}{
-  \comittemember{Profa. Dra. Professora 1}{Universidade XYZ}
-  \comittemember{Prof. Dr. Professor 2}{Universidade 123}
-  \comittemember{Profa. Dra. Professora 3}{Universidade ABC}
-  \comittemember{Prof. Dr. Professor 4}{Universidade HJKL}
-  \comittemember{Profa. Dra. Professora 5}{Universidade QWERTY}
+\vfill
+	\hspace{\stretch{1}}
+   	\vfill
+   	\begin{center}
+      \normalsize{
+          Salvador \\
+          2014
+       }
+   	\end{center}
 }
 
-% Dedicatória
-% Comente para ocultar
-\begin{dedicatory}
-<DIGITE A DEDICATÒRIA AQUI>
-\end{dedicatory}
+%% ----------------------------------------------------------------------------------
+%% Início do documento
+%% ----------------------------------------------------------------------------------
 
-% Agradecimentos
-% Se preferir, crie um arquivo à parte e o inclua via \include{}
-\acknowledgements
-<DIGITE OS AGRADECIMENTOS AQUI>
-
-% Epígrafe
-% Comente para ocultar
-% e.g.
-%  \begin{epigraph}[Tarde, 1919]{Olavo Bilac}
-%  Última flor do Lácio, inculta e bela,\\
-%  És, a um tempo, esplendor e sepultura;\\
-%  Ouro nativo, que, na ganga impura,\\
-%  A bruta mina entre os cascalhos vela.
-%  \end{epigraph}
-\begin{epigraph}[<NOTA>]{<AUTOR>}
-<DIGITE AQUI A CITAÇÂO>
-\end{epigraph}
+\begin{document}
+\capa 
+\folhaderosto
 
 % Resumo em Português
 % Se preferir, crie um arquivo à parte e o inclua via \include{}
-\resumo
+\begin{resumo}
 <DIGITE O RESUMO AQUI>
+
 % Palavras-chave do resumo em Português
-\begin{keywords}
-<DIGITE AS PALAVRAS-CHAVE AQUI>
-\end{keywords}
+\textbf{Palavras-chave}: Métodos Formais, Verificação de Modelos, Estruturas de Kripke, KMTS, Revisão de Modelos, Reparo de Modelos.
+\end{resumo}
 
 % Resumo em Inglês
 % Se preferir, crie um arquivo à parte e o inclua via \include{}
-\abstract
+\begin{abstract}
+
 % Palavras-chave do resumo em Inglês
-\begin{keywords}
-<DIGITE AS PALAVRAS-CHAVE AQUI>
-\end{keywords}
+\textbf{Key-words}: Formal Methods, Model Checking, Kripke Structures, KMTS, Model Revision, Model Repair.
+\end{abstract}
+
 
 % Sumário
 % Comente para ocultar
-\tableofcontents
+% \tableofcontents
+\sumario
 
 % Lista de figuras
 % Comente para ocultar
@@ -176,14 +147,15 @@
 
 % Lista de tabelas
 % Comente para ocultar
-\listoftables
+% \listoftables
 
+\renewcommand{\listofabreviationsname}{Lista de Abreviaturas e Siglas}
+\listadesiglas
 
-
-%%
-%% Parte textual
-%%
-\mainmatter
+%% --------------------------------------------------------------------------------------
+%% Parte Textual
+%% Capítulos
+%% --------------------------------------------------------------------------------------
 
 % É aconselhável criar cada capítulo em um arquivo à parte, digamos
 % "capitulo1.tex", "capitulo2.tex", ... "capituloN.tex" e depois
@@ -192,55 +164,140 @@
 % \include{capitulo2}
 % ...
 % \include{capituloN}
-%
-% Importante: Use \xchapter ao invés de \chapter, conforme exemplo abaixo.
 
-\chapter{Introdução}{Este é o primeiro capítulo, onde eu conto toda a
-história deste trabalho}
+%% Introdução ---------------------------------------------------------------------------
+\chapter{Introdução}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ac tellus turpis. Donec vitae lorem odio. Sed luctus vestibulum libero eget pellentesque. Vivamus in mi turpis. Donec molestie feugiat sollicitudin. Nam et eleifend tortor. Cras lacinia, magna in tristique consequat, urna lorem placerat odio, id viverra mi nulla nec sem. Ut imperdiet, felis a hendrerit imperdiet, velit metus eleifend diam, ut convallis neque augue vitae leo. Morbi condimentum rhoncus faucibus. Fusce elit justo, semper lobortis blandit sed, lacinia et ligula. Pellentesque elit magna, vestibulum vitae adipiscing in, tincidunt eu erat. Nullam eu lectus vel nunc eleifend consectetur. Phasellus faucibus blandit nisi, eget fermentum erat tincidunt et. Aliquam ullamcorper varius nunc, nec eleifend dolor porttitor eu. Etiam eget nunc eu erat facilisis consequat sed accumsan urna. Nam vitae eros et justo iaculis gravida in sed nisl. Donec auctor gravida ipsum. Morbi sed ipsum tortor, quis ornare purus.
+% TODO: Descrever detalhadamente a motivação (Reparo de Modelos), o contexto (metodos formais, agentes, revisão de crenças), o objetivo (a implementação) e o conteúdo
 
-Nulla facilisi. Praesent nec massa nulla, interdum lobortis orci. Integer convallis porttitor congue. Etiam lectus ipsum, iaculis eu malesuada malesuada, scelerisque semper est. In convallis ipsum lacus, at dapibus velit. Praesent semper diam eget eros ultrices quis elementum libero cursus. Aliquam erat volutpat. Nunc a lectus augue, id sagittis neque. Aliquam dignissim tempus sem ut pellentesque. Nulla libero orci, elementum vel malesuada mattis, adipiscing sed lorem. Cras lacinia elit vel magna mollis ut congue elit faucibus. Duis ornare mollis est, quis hendrerit neque convallis in.
+A área de métodos formais tem sido cada vez mais visada para a produção de softwares. A criação de modelos para o sistema, nos momentos iniciais de levantamento de requisitos, e sua póstuma automatização em sistemas robustos e formalmente verificados, são de grande interesse, uma vez que são aceleradores e facilitadores de desenvolvimento. Porém, um grande problema surge quando se trata de levantamento de requisitos, a incompletude do modelo do sistema.
 
-Donec at leo sed nisl varius iaculis. Sed ullamcorper nisl sit amet metus sollicitudin quis cursus elit imperdiet. Donec vel ante sed elit tempor hendrerit. Quisque commodo neque a ante tempor rhoncus. Proin purus metus, interdum mattis elementum quis, mollis et felis. Curabitur id nibh ac sapien porta pellentesque vel nec sapien. Duis ullamcorper consectetur elit, eleifend tincidunt leo adipiscing a. Cras nunc quam, sodales sit amet semper at, pharetra quis libero. Vestibulum posuere risus sed ante interdum tempor. Sed nec enim lorem, eu ultrices nisl. Maecenas cursus lacus non metus convallis cursus. Cras egestas feugiat libero, quis luctus justo mattis ut. Proin vitae magna et purus convallis blandit ut sed risus. Nulla vel ligula massa, vel interdum tortor. Integer sit amet eros sit amet lectus suscipit adipiscing. Aenean sagittis diam eu orci porttitor luctus.
+Nos estágios iniciais, não se sabe muito das propriedades que o sistema deve atender, ou mesmo se este atenderá corretamente as propriedades especificadas. Obviamente não temos interesse em indefinições ou incorreções no nossos modelos, e estas devem ser tratadas.
+Buscando a automação do processo de correção de modelos, nós podemos olhar para o campo da inteligência artificial, com agentes inteligentes que possuem uma base de crenças.
 
-Sed sed elit eu ante malesuada aliquet. Nunc quis quam turpis, accumsan faucibus sapien. Nam eget sem velit, id eleifend elit. Phasellus auctor egestas libero a adipiscing. Integer convallis, nunc sed tincidunt sollicitudin, augue diam accumsan risus, sit amet lacinia neque quam at lorem. Quisque ac rhoncus mauris. Donec felis odio, consequat vitae pretium ullamcorper, blandit id lorem. Morbi nec tellus vitae velit eleifend bibendum at vel eros. Sed quis enim urna. Cras placerat ultricies ipsum, sed tempor lorem placerat vitae. Morbi tellus leo, blandit eget feugiat nec, bibendum egestas erat. Mauris lobortis congue vestibulum. Nunc ultricies arcu in neque hendrerit convallis. Phasellus facilisis dictum nulla vel iaculis. Donec in adipiscing tellus. Aliquam non turpis neque. Nam in velit nec tortor gravida convallis. Vivamus tincidunt eros quis elit ultricies at adipiscing urna tempor. Donec posuere, ante pulvinar laoreet adipiscing, eros nulla pharetra nulla, vel rutrum elit est vitae ligula.
+Uma base de conhecimento ou crenças nada mais é que um conjunto de propriedades no qual aquele agente acredita e reconhece como verdadeiras para seu mundo. Nós podemos ver esse conjunto de propriedades como um modelo para um sistema, como o próprio sistema do agente. Ao explorar o mundo ao seu redor, um agente acaba por analisar e descobrir novas informações e propriedades a serem acrescentadas às suas crenças. Porém o que fazer quando essas informações são conflitantes? Nós não queremos que nosso pequeno e confuso agente destrua todas suas crenças para acomodar a nova informação. Por isso sempre buscamos as soluções que menos modifiquem sua base de crenças, soluções minimais.
 
-Phasellus urna nulla, laoreet in imperdiet a, porttitor eu nibh. Phasellus ac arcu magna, sit amet dapibus eros. Maecenas eget metus vitae leo feugiat lobortis ac quis tortor. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque vel augue metus. Quisque fringilla, arcu ut fringilla consectetur, mauris tellus euismod sem, in vehicula est leo vel nisi. Praesent sapien ligula, malesuada eget hendrerit ac, aliquet nec turpis. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla facilisi. Mauris commodo elementum elit, fermentum placerat nulla iaculis nec. Vestibulum neque dui, cursus at pharetra eu, sollicitudin eget justo. In id dignissim augue. Fusce interdum malesuada ipsum, non aliquet quam auctor eget. Curabitur turpis libero, pharetra ut cursus porta, pellentesque vitae magna. Cras porttitor interdum nisl.
+Com esse objetivo em mente, toda uma área de verificação de modelos foi desenvolvida, utilizando-se de linguagens formais e lógicas para especificação e abstração de propriedades, e algoritmos de verificação e revisão. Os modelos do sistema são representados aqui em estruturas de Kripke, grafos direcionados contendo informações sobre estados do sistema, propriedades e transições.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ac tellus turpis. Donec vitae lorem odio. Sed luctus vestibulum libero eget pellentesque. Vivamus in mi turpis. Donec molestie feugiat sollicitudin. Nam et eleifend tortor. Cras lacinia, magna in tristique consequat, urna lorem placerat odio, id viverra mi nulla nec sem. Ut imperdiet, felis a hendrerit imperdiet, velit metus eleifend diam, ut convallis neque augue vitae leo. Morbi condimentum rhoncus faucibus. Fusce elit justo, semper lobortis blandit sed, lacinia et ligula. Pellentesque elit magna, vestibulum vitae adipiscing in, tincidunt eu erat. Nullam eu lectus vel nunc eleifend consectetur. Phasellus faucibus blandit nisi, eget fermentum erat tincidunt et. Aliquam ullamcorper varius nunc, nec eleifend dolor porttitor eu. Etiam eget nunc eu erat facilisis consequat sed accumsan urna. Nam vitae eros et justo iaculis gravida in sed nisl. Donec auctor gravida ipsum. Morbi sed ipsum tortor, quis ornare purus.
+Em \cite{aline} foi proposto o uso de Estruturas Modais de Kripke (\textit{Kripke Modal Transition System} -- KMTS)\sigla{KMTS}{Kripke Modal Transition System} para representar informações parciais sobre o sistema, como opções do fluxo de operações e indefinições de propriedades ou estados. Um KMTS pode ser visto como uma abstração de um conjunto de estruturas de Kripke, cada estrutura representando uma das possibilidades geradas pelas informações parciais do KMTS.
 
-Nulla facilisi. Praesent nec massa nulla, interdum lobortis orci. Integer convallis porttitor congue. Etiam lectus ipsum, iaculis eu malesuada malesuada, scelerisque semper est. In convallis ipsum lacus, at dapibus velit. Praesent semper diam eget eros ultrices quis elementum libero cursus. Aliquam erat volutpat. Nunc a lectus augue, id sagittis neque. Aliquam dignissim tempus sem ut pellentesque. Nulla libero orci, elementum vel malesuada mattis, adipiscing sed lorem. Cras lacinia elit vel magna mollis ut congue elit faucibus. Duis ornare mollis est, quis hendrerit neque convallis in.
+Para realizar a verificação dos modelos sobre as estruturas de Kripke, a linguagem do $\mu$-calculus é a preferida e largamente utilizada pela sua completude. Outras lógicas podem ser facilmente derivadas do $\mu$-calculus. Para o nosso escopo, porém, de sistemas computacionais, o $\mu$-calculus pode ser completo até demais. Por isso foi proposto e utilizado a Lógica de Árvore Computacional (CTL - \textit{Computing Tree Logic})\sigla{CTL}{Computing Tree Logic} para as propriedades dos modelos a serem verificadas.
 
-Donec at leo sed nisl varius iaculis. Sed ullamcorper nisl sit amet metus sollicitudin quis cursus elit imperdiet. Donec vel ante sed elit tempor hendrerit. Quisque commodo neque a ante tempor rhoncus. Proin purus metus, interdum mattis elementum quis, mollis et felis. Curabitur id nibh ac sapien porta pellentesque vel nec sapien. Duis ullamcorper consectetur elit, eleifend tincidunt leo adipiscing a. Cras nunc quam, sodales sit amet semper at, pharetra quis libero. Vestibulum posuere risus sed ante interdum tempor. Sed nec enim lorem, eu ultrices nisl. Maecenas cursus lacus non metus convallis cursus. Cras egestas feugiat libero, quis luctus justo mattis ut. Proin vitae magna et purus convallis blandit ut sed risus. Nulla vel ligula massa, vel interdum tortor. Integer sit amet eros sit amet lectus suscipit adipiscing. Aenean sagittis diam eu orci porttitor luctus.
+Como representamos indefinições e informações parciais no nossos modelos KMTS, a lógica utilizada deve possuir esse terceiro valor, indefinido $\perp$, resultando em algoritmos de verificação de modelos de três valores. Na nossa abordagem, é utilizado um algoritmo baseado em jogos de três valores, proposto em \cite{grumberglosing}.
 
-Sed sed elit eu ante malesuada aliquet. Nunc quis quam turpis, accumsan faucibus sapien. Nam eget sem velit, id eleifend elit. Phasellus auctor egestas libero a adipiscing. Integer convallis, nunc sed tincidunt sollicitudin, augue diam accumsan risus, sit amet lacinia neque quam at lorem. Quisque ac rhoncus mauris. Donec felis odio, consequat vitae pretium ullamcorper, blandit id lorem. Morbi nec tellus vitae velit eleifend bibendum at vel eros. Sed quis enim urna. Cras placerat ultricies ipsum, sed tempor lorem placerat vitae. Morbi tellus leo, blandit eget feugiat nec, bibendum egestas erat. Mauris lobortis congue vestibulum. Nunc ultricies arcu in neque hendrerit convallis. Phasellus facilisis dictum nulla vel iaculis. Donec in adipiscing tellus. Aliquam non turpis neque. Nam in velit nec tortor gravida convallis. Vivamus tincidunt eros quis elit ultricies at adipiscing urna tempor. Donec posuere, ante pulvinar laoreet adipiscing, eros nulla pharetra nulla, vel rutrum elit est vitae ligula.
+Então, quando nosso pequeno agente realiza a verificação do seu modelo de acordo com a nova informação obtida, ele pode obter três resultados diferentes. $\top$ se essa informação está okay com seu modelo de crenças; $\perp$ se essa informação está indefinida, ou ainda resultando em um estado ou fluxo indefinido; e $F$ se essa informação contradiz algo em seu modelo.
 
-Phasellus urna nulla, laoreet in imperdiet a, porttitor eu nibh. Phasellus ac arcu magna, sit amet dapibus eros. Maecenas eget metus vitae leo feugiat lobortis ac quis tortor. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque vel augue metus. Quisque fringilla, arcu ut fringilla consectetur, mauris tellus euismod sem, in vehicula est leo vel nisi. Praesent sapien ligula, malesuada eget hendrerit ac, aliquet nec turpis. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla facilisi. Mauris commodo elementum elit, fermentum placerat nulla iaculis nec. Vestibulum neque dui, cursus at pharetra eu, sollicitudin eget justo. In id dignissim augue. Fusce interdum malesuada ipsum, non aliquet quam auctor eget. Curabitur turpis libero, pharetra ut cursus porta, pellentesque vitae magna. Cras porttitor interdum nisl.
+Ele deverá fazer agora uma revisão de seu modelo de crenças, procurando assimilar, ou satisfazer, essa nova propriedade com o mínimo de mudanças possíveis. Um algoritmo para essa revisão automática foi inicialmente proposto em \cite{wasserman} e posteriormente evoluído em \cite{aline}, envolvendo a abordagem de jogos de três valores de \cite{grumberglosing}. Esse algoritmo é dividido em duas partes, refinamento e reparo do modelo, onde o objetivo é revisar o modelo quando a verificação deste retorna $\perp$ e $F$, respectivamente.
 
-\chapter{Revisão Bibliográfica}{Neste capítulo eu apresento todo o
-material que eu estudei durante a elaboração do trabalho.}
+\cite{jandson} realizou a implementação do refinamento automático do modelo, expandindo o algoritmo com o uso de propriedades de grafos, resultando em um programa completamente funcional. Ainda neste trabalho foi realizada a implementação de algoritmos auxiliares, como o de verificação de modelos com lógica de três valores baseado em jogos.
+
+O objetivo deste trabalho é a realização da implementação do reparo do modelo KMTS para quando a verificação de modelos retorna $F$, expandindo-se no algoritmo proposto em \cite{aline} e no de refinamento implementado. Fazemos também considerações sobre questões de minimalidade das soluções e propostas para melhorias da complexidade do algoritmo.
+
+A estrutura dessa monografia segue a seguinte forma: No capítulo \ref{cap:verificacao} apresentamos a base teórica com as definições da verificação de modelos. O algoritmo de verificação de modelos usando CTL de três valores sobre KMTS é apresentado no capítulo \ref{cap:revisao}, com exemplos do refinamento. Já no capítulo \ref{cap:reparo}, falamos sobre o algoritmo de reparo, mostrando seu funcionamento. A implementação e estratégias utilizadas são apresentadas no capítulo \ref{cap:implementacao}, enquanto que uma evolução das mesmas e o conceito de minimalidade é explorado no capítulo \ref{cap:minimalidade}. Finalmente, no capítulo \ref{cap:conclusao} traçamos as considerações finais e apresentamos os trabalhos futuros.
+
+%%
+%% Capítulo Verificação -----------------------------------------------------------------
+%%
+\chapter{Verificação de Modelos}
+\label{cap:verificacao}
+
+TODO: Entrar no âmbito de modelos, revisando o background necessário para o entendimento do trabalho. Falar sobre estruturas de Kripke, KMTS, CTL vs mu-calculos, model checking com jogos.
+
+\textbf{devo redefinir tudo e explicar o que é estrutura de kripke, mostrar exemplos, kmts, ctl e etc?}
+
+Verificação de Modelos é uma área robusta e em expansão de Métodos Formais, cujo objetivo é a validação e garantia da corretude e outras propriedades de modelos. Existe uma gama de algorítmos de verificação de modelos, usados com diversas estruturas de dados e lógicas. Neste trabalho focaremos em dois modelos formais, estruturas de Kripke e KMTS.
+
+\begin{definition}
+\textnormal{
+Uma estrutura de Kripke é uma tupla $ M = (S, \to , L)$ onde $S$ é um conjunto de estados finitos, $\to$ é uma relação binária em S, $\to \in S^2$, tal que para todo $s \in S$, existe algum $s' \in S$ com $s \to s'$. $L$ é uma função de rotulação $L : S \to AP$, onde $AP$ é um conjunto de fórmulas atômicas. A função rotula os átomos que ocorrem em um determinado estado $s$. 
+}
+\end{definition}
+
+Uma estrutura de Kripke pode ser representada como um grafo direcionado, muito similar a autômatos, contendo informações dos estados do sistema e suas propriedades, como na figura \ref{fig:ex_kripke1}. Mapeando também ações que levam a mudança de estados, como transições do grafo.
+
+\begin{figure}[htb]
+\begin{center}
+ \begin{tikzpicture}[->,shorten >=2pt,auto,node distance=2.5cm,align=center,
+  thick,every node/.style={circle,fill=blue!18,draw,minimum size=2.5em, font=\sffamily\small\bfseries}]
+
+  \node[ label=120:$s_0$ ] (0) { $ p , q$ };
+  \node[ label=(75):$s_2$ ] (2) [below right of=0] {$ r$};
+  \node[ label=(120):$s_1$ ] (1) [below  left of=0] {$ q , r$ };
+
+  \path[every node/.style={font=\sffamily\small}]
+    (0) edge node [left] {} (2)
+    (0) edge [bend right] node[right] {} (1)        
+    (1) edge node [right] {} (2)
+    (1) edge node [right] {} (2)
+        edge [bend right] node[right] {} (0)
+    (2) edge [loop right] node {} (2)       
+    ;
+
+\end{tikzpicture}
+\end{center}
+\caption[Estrutura de Kripke representado por um grafo direcionado]{Estrutura de Kripke representado por um grafo direcionado. \\ Fonte. \citeonline[p. 136]{huth}}
+\label{fig:ex_kripke1}
+\end{figure}
+
+Um KMTS é similar a uma estrutura simples de Kripke, porém tem o poder expressivo para representar informações parciais, na forma das transições \textit{may} e estados com literais indefinidos. Enquanto que em uma estrutura de Kripke a omissão da rotulação de um literal significa que este literal é negativo, no KMTS isso significa que o literal é indefinido, sendo necessária a rotulação também de quando os literais forem negativos naquele estado.
+
+\begin{definition}\cite{aline}
+\textnormal{KMTS é uma tupla $M = < AP$, $S,$ $S_o,$  $R^+,$ $R^-,$  $ L$ $ > $, onde $S$ é um conjunto de estados finitos, $S_0 \subseteq S$ é o conjunto de estados iniciais, $R^+ \subseteq S \times S$ e $R^- \subseteq S \times S$  são relações de transição, tal que $R^+ \subseteq R^-$; $Lit = {AP \cup \{ \neg p | p \in AP\}}$ é o conjunto de literais sobre AP e $L: S \to 2^{Lit}$ é uma função de rotulação, tal que para todos os estados $s$ e $p \in AP$, no máximo somente um entre $p$ e $\neg p$ ocorre. As transições $R^+$ e $R^-$ correspondem às transições \textit{must} e \textit{may}, respectivamente.
+}
+\end{definition}
+
+É fácil e interessante perceber que cada indefinição em um KMTS representa uma estrutura de Kripke diferente. Por exemplo, cada transição \textit{may} representa uma estrutura de Kripke onde essa transição é \textit{must} e uma estrutura onde essa transição não existe. O mesmo vale para indefinições em estados. Cada omissão de um determinado literal em um estado representa duas estruturas de Kripke, uma onde o literal é positivo e outra onde é negativo.
+
+Esse poder de abstração do KMTS foi atraente para o nosso objetivo, podendo realizar a verificação e revisão em um conjunto de modelos de uma forma muito mais eficiente
+
+%%
+%% Capítulo Revisão -------------------------------------------------------------------
+%%
+\chapter{Revisão de Modelos}
+\label{cap:revisao}
+
+TODO: Falar sobre a revisão de modelos KMTS, sobre o que já foi feito na área, abordagens utilizadas, sobre o refinamento já implementado.
 
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ac tellus turpis. Donec vitae lorem odio. Sed luctus vestibulum libero eget pellentesque. Vivamus in mi turpis. Donec molestie feugiat sollicitudin. Nam et eleifend tortor. Cras lacinia, magna in tristique consequat, urna lorem placerat odio, id viverra mi nulla nec sem. Ut imperdiet, felis a hendrerit imperdiet, velit metus eleifend diam, ut convallis neque augue vitae leo. Morbi condimentum rhoncus faucibus. Fusce elit justo, semper lobortis blandit sed, lacinia et ligula. Pellentesque elit magna, vestibulum vitae adipiscing in, tincidunt eu erat. Nullam eu lectus vel nunc eleifend consectetur. Phasellus faucibus blandit nisi, eget fermentum erat tincidunt et. Aliquam ullamcorper varius nunc, nec eleifend dolor porttitor eu. Etiam eget nunc eu erat facilisis consequat sed accumsan urna. Nam vitae eros et justo iaculis gravida in sed nisl. Donec auctor gravida ipsum. Morbi sed ipsum tortor, quis ornare purus.
+%%
+%% Capítulo Reparo --------------------------------------------------------------------
+%%
+\chapter{Reparo de Modelos}
+\label{cap:reparo}
 
-Nulla facilisi. Praesent nec massa nulla, interdum lobortis orci. Integer convallis porttitor congue. Etiam lectus ipsum, iaculis eu malesuada malesuada, scelerisque semper est. In convallis ipsum lacus, at dapibus velit. Praesent semper diam eget eros ultrices quis elementum libero cursus. Aliquam erat volutpat. Nunc a lectus augue, id sagittis neque. Aliquam dignissim tempus sem ut pellentesque. Nulla libero orci, elementum vel malesuada mattis, adipiscing sed lorem. Cras lacinia elit vel magna mollis ut congue elit faucibus. Duis ornare mollis est, quis hendrerit neque convallis in.
+TODO: Falar sobre o reparo, toda a parte teórica. Sobre a construção das jogadas, o que torna o resultado do model checking falso, a necessidade da correção, os conceitos de minimalidade já vistos e os cuidados com o reparo.Explicar o algoritmo por alto.
 
-Donec at leo sed nisl varius iaculis. Sed ullamcorper nisl sit amet metus sollicitudin quis cursus elit imperdiet. Donec vel ante sed elit tempor hendrerit. Quisque commodo neque a ante tempor rhoncus. Proin purus metus, interdum mattis elementum quis, mollis et felis. Curabitur id nibh ac sapien porta pellentesque vel nec sapien. Duis ullamcorper consectetur elit, eleifend tincidunt leo adipiscing a. Cras nunc quam, sodales sit amet semper at, pharetra quis libero. Vestibulum posuere risus sed ante interdum tempor. Sed nec enim lorem, eu ultrices nisl. Maecenas cursus lacus non metus convallis cursus. Cras egestas feugiat libero, quis luctus justo mattis ut. Proin vitae magna et purus convallis blandit ut sed risus. Nulla vel ligula massa, vel interdum tortor. Integer sit amet eros sit amet lectus suscipit adipiscing. Aenean sagittis diam eu orci porttitor luctus.
+%%
+%% Capítulo Implementação ---------------------------------------------------------------
+%%
+\chapter{Implementação do Reparo de Modelos}
+\label{cap:implementacao}
 
-Sed sed elit eu ante malesuada aliquet. Nunc quis quam turpis, accumsan faucibus sapien. Nam eget sem velit, id eleifend elit. Phasellus auctor egestas libero a adipiscing. Integer convallis, nunc sed tincidunt sollicitudin, augue diam accumsan risus, sit amet lacinia neque quam at lorem. Quisque ac rhoncus mauris. Donec felis odio, consequat vitae pretium ullamcorper, blandit id lorem. Morbi nec tellus vitae velit eleifend bibendum at vel eros. Sed quis enim urna. Cras placerat ultricies ipsum, sed tempor lorem placerat vitae. Morbi tellus leo, blandit eget feugiat nec, bibendum egestas erat. Mauris lobortis congue vestibulum. Nunc ultricies arcu in neque hendrerit convallis. Phasellus facilisis dictum nulla vel iaculis. Donec in adipiscing tellus. Aliquam non turpis neque. Nam in velit nec tortor gravida convallis. Vivamus tincidunt eros quis elit ultricies at adipiscing urna tempor. Donec posuere, ante pulvinar laoreet adipiscing, eros nulla pharetra nulla, vel rutrum elit est vitae ligula.
+TODO: Falar sobre a implementação do algoritmo em si. Estratégias utilizadas, linguagem, aplicação de tecnicas para facilitar o desenvolvimento, melhorias sobre o algoritmo, tratos de eficiencia e talvez sobre a GUI se for feita.
 
-Phasellus urna nulla, laoreet in imperdiet a, porttitor eu nibh. Phasellus ac arcu magna, sit amet dapibus eros. Maecenas eget metus vitae leo feugiat lobortis ac quis tortor. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque vel augue metus. Quisque fringilla, arcu ut fringilla consectetur, mauris tellus euismod sem, in vehicula est leo vel nisi. Praesent sapien ligula, malesuada eget hendrerit ac, aliquet nec turpis. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla facilisi. Mauris commodo elementum elit, fermentum placerat nulla iaculis nec. Vestibulum neque dui, cursus at pharetra eu, sollicitudin eget justo. In id dignissim augue. Fusce interdum malesuada ipsum, non aliquet quam auctor eget. Curabitur turpis libero, pharetra ut cursus porta, pellentesque vitae magna. Cras porttitor interdum nisl.
+%%
+%% Capítulo Minimalidade ----------------------------------------------------------------
+%%
+\chapter{Inclusão de Estados e Minimalidade}
+\label{cap:minimalidade}
 
+TODO: Falar sobre a operaçao p6, a inclusão de estados, para o caso de jogadas EX Y em que não existam mais transições. O que fazer, os impactos de criações de estados, de novas transições. p6 afeta mais a minimalidade do que p2 e p4. Vantagens e desvantagens de sua aplicação. 
+
+%%
+%% Conclusão ----------------------------------------------------------------------------
+%%
+\chapter{Conclusão}
+\label{cap:conclusao}
+
+TODO: Concluir o trabalho, citar as experiencias aprendidas, os artefatos criados e a contribuição realizada para a área. Trabalhos futuros que possam surgir de ou a partir deste trabalho.
 
 %%
 %% Parte pós-textual
 %%
-\backmatter
 
 % Apêndices
 % Comente se não houver apêndices
-\appendix
+%\appendix
 
 % É aconselhável criar cada apêndice em um arquivo à parte, digamos
 % "apendice1.tex", "apendice.tex", ... "apendiceM.tex" e depois
@@ -253,15 +310,8 @@ Phasellus urna nulla, laoreet in imperdiet a, porttitor eu nibh. Phasellus ac ar
 
 % Bibliografia
 % É aconselhável utilizar o BibTeX a partir de um arquivo, digamos "biblio.bib".
-% Para ajuda na criação do arquivo .bib e utilização do BibTeX, recorra ao
-% BibTeXpress em www.cin.ufpe.br/~paguso/bibtexpress
 \bibliographystyle{abnt-alf}
-\bibliography{biblio}
-
-% Cólofon
-% Inclui uma pequena nota com referência à UFPEThesis
-% Comente para omitir
-%\colophon
+\bibliography{bibliografia}
 
 %% Fim do documento
 \end{document}

@@ -1,0 +1,498 @@
+\documentclass{llncs}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[onelanguage,ruled,linesnumbered,nokwfunc]{algorithm2e}
+
+% ---------------------------------------------------------------------------- %
+% Abreviaturas para o texto
+%\def\tt{{\mbox{$t\!t\,$}}}
+%\def\ff{{\mbox{$f\!\!f\,$}}}
+\def\llb{\left\|}
+\def\rrb{\right\|}
+\newcommand{\ksdef}[1][]{{{$K{#1} = \langle AP{#1},$ $ S{#1}, S{#1}_{0}, $ $ R{#1},$ $ L{#1} \rangle$\;}}}
+\newcommand{\kmtsdef}[1][]{{{$M{#1} = \langle AP{#1}, S{#1}, S{#1}_{0}, R{#1}^{+}, R{#1}^{-}, L{#1} \rangle$}\;}}
+\newcommand{\modalbox}[1]{[{#1}]}
+\newcommand{\modaldiam}[1]{\langle {#1} \rangle}
+
+\title{Toward the Revision of CTL Models through Kripke Modal Transition Systems}
+\titlerunning{Revision of CTL through KMTS} % abbreviated title (for running head) also used for the TOC unless \toctitle is used
+
+\author{Paulo T. Guerra \inst{1} \and Aline Andrade \inst{2} \and Renata Wassermann \inst{1}}
+\authorrunning{Guerra, Andrade \and Wassermann} % abbreviated author list (for running head) list of authors for the TOC (use if author list has to be modified)
+\tocauthor{Paulo T. Guerra, Aline Andrade and Renata Wassermann}
+
+\institute{University of S\~ao Paulo\\
+        \{paulotgo,renata\}@ime.usp.br
+	\and
+	Federal University of Bahia \\		
+	aline@ufba.br
+}
+
+\begin{document} 
+
+\maketitle
+
+     
+\begin{abstract} 
+In this paper we consider the problem of automatic repair of models in the context of  system partial specification. This problem is a challenge involving theoretical and practical issues and the theory of belief revision is an alternative to give theoretical support to its solution. 
+A Kripke structure is widely used to model systems, but it does not express partial information explicitly and a set of these structures might be required to represent several possibilities of behavior. A more general structure is the Kripke Modal Transition System (KMTS) which can specify systems with partial information and can be interpreted as a set of Kripke models. In this paper, we propose a framework for the repair of KMTS based on belief revision combined with model checking as an approach to revise sets of Kripke structures. We demonstrate the advantages of our approach, even with the existing restrictions in representing general sets of CTL models over the KMTS formalism.
+\end{abstract}
+
+\section{Introduction}
+In the preliminary phases of system development it can be necessary to deal with incomplete information because generally not all requirements are already known. To specify an undetermined system it is desirable that models can represent partial information, such as possible behaviors. When a model does not explicitly express partial information, an alternative is to take several models as possible candidates for the system behavior. In both cases the models should be able to be formally verified and when a desired property is not satisfied the models must be repaired, ideally automatically.   
+
+We consider in this work the technique of model checking \cite{CGP99} for the verification of systems, particularly model checking over Kripke structures as CTL (Computation Tree Logic) models. A CTL model checker solves the decision problem: given a Kripke structure $K$, an initial state $s_0$ and a CTL formula $\varphi$, does $K$ satisfy $\phi$ from $s_0$? ($K,s_0 \models \phi$ ?). When the property is not satisfied, the model checker shows a counter-example that can guide the repair of the model.
+
+A CTL model does not express partial information explicitly. A set of these structures might be required to represent several possibilities of behavior. A more general Kripke structure is the Kripke Modal Transition System (KMTS) which is adequate for the specification of systems with partial information \cite{Hut02} and can be expanded in a set of CTL models. KMTS is interpreted over a 3-valued logic and can represent behavior that must or may occur. Model checking over KMTS \cite{Hut02}, besides \textit{true} and \textit{false} values, can return \textit{indefinite} meaning both values may be consistent. 
+
+The automatic repair of models is not straightforward and presents several challenges. The theory of belief revision \cite{AGM85} can be applied to this problem by considering models as beliefs \cite{GW10,Pau10}. In \cite{GW10}, a revision operation is defined to repair a set of CTL models when they are inconsistent with a desired property. 
+
+In this paper, we define the revision of a set of CTL models through the revision of a KMTS model when the KMTS model checking returns \textit{false} or \textit{indefinite}. We compare it with the revision of a set of CTL models as proposed in \cite{Pau10} and show the correspondence between these two approaches. Although there are some restrictions in representing a general set of Kripke models, we argue that the compact representation of KMTSs has advantages during the revision process. We show how revision can be implemented, using model checking through 3-valued model checking game as proposed in \cite{Gru11}.
+ 
+To the best of our knowledge this is the first work on revision of a set of CTL models through KMTS. In \cite{CBSK12} the authors propose an algorithm to repair KMTS models based on primitive changes defined in \cite{ZD08}. Unlike our proposal this work is not based on belief revision and it does not make reference to any other theory of change and its context is abstract model checking, where a KMTS model represents an abstraction of a concrete Kripke structure as proposed by \cite{Gru11}. 
+
+%This paper is organized as follows. In Section \ref{secMedRepPro}, we briefly introduce CTL, the model repair problem and the model revision approach. In Section \ref{secKMTS} we introduce KMTS and how it is expanded into Kripke structures. In Section \ref{secRevKMTS} we define revision of KMTS, its operations, the minimality criteria and proofs of its correctness. We describe how to implement KMTS revision in Section \ref{secImpl} based on a model checking game.  Finally in Sections \ref{secFinRem} and \ref{secCon} we discuss this approach and conclude the paper.
+
+This paper is organized as follows. In Section \ref{secMedRepPro}, we briefly introduce CTL and the model revision approach. In Section \ref{secKMTS} we introduce KMTS and how it is expanded into Kripke structures. In Section \ref{secRevKMTS} we define revision of KMTS, its operations, the minimality criterion and proofs of its correctness. We describe how to implement KMTS revision in Section \ref{secImpl} based on a model checking game.  Finally in Sections \ref{secFinRem} and \ref{secCon} we discuss this approach and conclude the paper.
+
+
+\section{Preliminaries} \label{secMedRepPro}
+
+%The model repair problem consists of, giving a negative answer to the model checking $(M,s) \vDash \phi$, how to adapt $M$ to satisfy $\phi$. We focus on a specific kind of model repair, when properties are expressed in the logic CTL.
+
+\subsection{Computation Tree Logic}
+
+The computation tree logic (CTL) \cite{CE81,CES86} is a temporal logic where the future is represented by a time-branching structure. CTL is suitable for example to describe properties over computer program and its different execution paths. The CTL syntax is given by the following Backus-Naur form:
+	\begin{align*} 
+		\phi \mathop{::=}& \top ~|~ \bot ~|~ p ~|~ (\neg \phi) ~|~ (\phi \vee \phi) ~|~
+					(\phi \wedge \phi) ~|~ (\phi \rightarrow \phi) ~|~ EX{\phi} ~|~ \\			
+				&	AX{\phi} ~|~  EF{\phi} ~|~ AF{\phi} ~|~ EG{\phi} ~|~ AG{\phi} ~|~ 
+					E[{\phi}U{\phi}] ~|~ A[{\phi}U{\phi}] 
+	\end{align*}
+where its temporal operators comprise: path quantifiers (E, ``there is a path'', or A, ``for all paths''); and state operators (X, ``neXt state'', U, ``Until'', G, ``Globally in states'' or F, ``some Future state'').
+
+The semantics for CTL is defined over a labelled transition system called Kripke structure. These structures are described by Definition \ref{defKripke}.
+
+\begin{definition}\label{defKripke}
+A Kripke structure is a tuple $ M = (AP,S,S_0,R,L) $ where $AP$ is a set of atomic propositions;
+$S$ is a finite set of states,
+$S_0 \subseteq S$ is the set of initial states,
+$R \subseteq S \times S$ is transition relation over $S$, and
+$L: S \rightarrow 2^{AP}$ is a labelling function of truth assignment over states.
+\footnote{Usually the transition relation is defined as total. Although it makes simple the definition of many temporal logic semantics, this requirement is not needed.}
+\end{definition}
+
+For convenience, we frequently refer to Kripke structures as CTL models. %When the model repair problem is restricted to CTL models and CTL formulas, we refer to it as \textit{CTL model repair} problem.
+
+%\subsection{Minimal Change} 
+
+\subsection{CTL Model Revision}\label{secCTLModRev}
+
+Guerra and Wassermann \cite{GW10,Pau10} propose a model repair framework using principles of belief revision theory \cite{AGM85}. Belief revision deals with how to rationally adapt dynamic beliefs set in order to incorporate new information, even if it is inconsistent with what is believed. This rationality principle usually involve a minimal change assumption, that is also intended to the model repair: the solution should preserve as much information as possible from the original model. 
+
+%Solutions to the model repair problem usually involve a sort of minimal change assumption: the repair should preserve as much information as possible from the original model. This principle is related to the one in theories as belief revision \cite{AGM85}, that deals with how to rationally adapt dynamic beliefs set in order to incorporate new information, even if it is inconsistent with what is believed.
+%
+%Guerra and Wassermann \cite{GW10,Pau10} propose a repair framework using belief revision principles. 
+The authors define a model revision operator $ \circ_c $ based on a set of basic model change operations, as proposed by \cite{ZD08}. These change operations represent all primitive structural changes over a CTL model:
+
+\begin{enumerate} 
+\item[] {PU1:} Adding one pair to the relation R
+\item[] {PU2:} Removing one pair from the relation R
+\item[] {PU3:} Changing the labelling function on one state
+\item[] {PU4:} Adding one state to S
+\item[] {PU5:} Removing one isolated state of S
+\end{enumerate}
+
+Let $M$ and $M'$  be two CTL models, we denote by {\it Diff}$_{PU_i}(M,M')$ the structural difference between $M$ and $M'$ produced by applications of $PU_i$, for example, {\it Diff}$_{PU_1}(M,M')$ denotes the transitions added to $M$ in order to achieve $M'$. 
+
+A model change is said to be  \textit{admissible} if it produces a model $M'$ from $M$ such that $M'$ satisfies the desired property and there is no model $M''$ obtained from $M$ such that {\it Diff}$_{PU_i}(M,M'') \subseteq$ {\it Diff}$_{PU_i}(M,M') $, $i=1,...,5$ and {\it Diff}$_{PU_i}(M,M'') \subset$ {\it Diff}$_{PU_i}(M,M') $, for some $i=1,...,5$. Guerra and Wassermann define a minimality criterion over admissible changes in order to select minimal changes according to belief revision principles, therefore defining the following revision operator: 
+\[
+ Mod(\psi \circ_c \phi) = Min_{Mod(\psi)}(Mod(\phi)),
+\]
+where $\psi$, $\phi$ are CTL formulas that represent the initial beliefs and the new information, respectively, $Mod(\alpha)$ all CTL models of a formula $\alpha$ and $ Min_\mathcal{B}(\mathcal{A}) $ the set of all minimal models of $ \mathcal{A} $ according to any admissible modification on any model of $ \mathcal{B} $. The authors show that $ \circ_c $ satisfies the rationality postulates for belief revision as presented in \cite{KM91}.
+
+Guerra and Wasserman \cite{GW10} also proposed an algorithm for CTL model revision. The algorithm receives as input a CTL formula $\phi$ and a set of CTL models that do not satisfy $\phi$, then by repairing each model individually and filtering these repaired models according to their belief revision ordering criterion, the algorithm returns as result a set of revised models representing possible corrections to the original models relative to the formula $\phi$.
+
+\section{Kripke Model Transition System as sets of CTL models} \label{secKMTS}
+
+KMTS are expressive models to represent undetermined or sub-specified systems. They have two types of transitions, transitions that \textit{must} occur and transitions that \textit{may} occur, which represent necessary and possible behavior, respectively. 
+
+Specification over KMTS are written in the $\mu-calculus$ and in this work we use this language in its negation normal form.   
+
+\begin{definition}
+($\mu-calculus$). Let AP be a set of atomic propositions and \textit{V} a set of propositional variables. The set of literals over  AP is defined as $Lit = AP \cup\{\neg p \mid p \in AP\}$. The $\mu-calculus$ in its negation normal form over AP is defined by
+$\varphi$ ::= \texttt{l} $\mid$ Z $\mid$ $\varphi \wedge \varphi$ $\mid$ $\varphi \vee \varphi$ $\mid$ $AX\varphi$ $\mid$ $EX \varphi$ $\mid$ $\mu$Z.$\varphi$ $\mid$ $\upsilon$Z.$\varphi$
+ where \texttt{l} $\in Lit$ and Z $\in$ \textit{V}. $AX$ means for all successors and $EX$ means there exists a successor. $\mu$ denote the least fixpoint and $\upsilon$ denote the greatest fixpoint. A formula $\varphi$ is closed if all its variables Z are bounded by a fixpoint operator $\mu$ or $\upsilon$.\\
+\end{definition}
+
+\vspace*{-0.4cm}
+
+CTL formulas can be specified in $\mu-calculus$ by the following translation: $EF\phi \equiv \mu Z.\phi \vee EXZ; AF\phi \equiv \mu Z.\phi \vee AXZ; EG\phi \equiv \upsilon Z. \phi \wedge EXZ; AG\phi \equiv \upsilon Z. \phi \wedge AXZ; E[{\phi}U{\phi}] \equiv \mu Z.\phi \vee (\phi \wedge EXZ); \mbox{ and } A[{\phi}U{\phi}] \equiv \mu Z.\phi \vee (\phi \wedge AXZ)$.
+
+\begin{definition}
+A Kripke modal transition system (KMTS) is a tuple $M = \langle AP,$ $ S, S_{0}, R^{+}, R^{-}, L \rangle$, where $S$ is a set of finite sates, $S_{0} \subseteq S$ is the set of initail states, $R^{+} \subseteq S \times S$ and $R^{-} \subseteq S \times S$ are transition relations such that $R^{+} \subseteq R^{-}$, and $L : S \rightarrow 2^{Lit}$ is a label function, such that for all state $s$ and $p \in AP$, at most one between $p$ and $\neg p$ occur. The transitions $R^{+}$ e $R^{-}$ correspond  to the transitions \textit{must} and \textit{may} respectively.
+\end{definition} 
+
+\begin{figure}[!htb]
+\minipage{0.25\textwidth}
+ 	\includegraphics[width=\textwidth]{FigKMTS2.pdf}
+\endminipage\hfill
+\minipage{0.75\textwidth}
+	\includegraphics[width=\textwidth]{FigExpan1.pdf}
+	\endminipage\hfill
+\caption{(a) Example of a KMTS M \quad (b) Expansion M$_{\mbox{\scriptsize K}}$ of M}
+\label{figKMTSeExpan}
+\end{figure}
+
+%The semantics below is presented in \cite{Gru11}. A complete semantics is given in \cite{GLLS07}\footnote{AX and EX are represented in \cite{GLLS07} as [a] and $\langle$a$\rangle$, respectively, here we abstract the }.
+
+The semantics defined below is presented in \cite{Gru11}. A complete semantics of $\mu-calculus$ is presented in \cite{GLLS07}.%\footnote{The temporal operators AX and EX are represented in \cite{GLLS07} as [a] and $\langle$a$\rangle$ respectively where we abstract the action a.}
+
+\begin{definition}
+The semantics of three values $\left\|\varphi\right\|^{M}_{3}$ of a  closed formula $\varphi$ with respect to a KMTS $M$ is a map from $S$ to ${\{T, F, \bot\}}$. The interesting cases are defined below. 
+\begin{align*}
+\llb \texttt{l} \rrb^M_3(s) &= T \mbox{ if } \texttt{l} \in L(s), F \mbox{ if } \neg \texttt{l} \in L(s), \bot \mbox{ otherwise}.\\
+\llb AX \varphi \rrb^M_3(s) &= \begin{cases} 	
+									T, & \mbox{if } \forall t \in S, \mbox{if } R^{-}(s,t) 
+										\mbox{ then } \llb\varphi\rrb^M_3(t) = T \\ 
+									F, & \mbox{if } \exists t \in S \mbox{ such that } R^{+}(s,t) 
+										\mbox{ and } \llb\varphi\rrb^M_3(t) = F \\ 
+									\bot, & \mbox{otherwise}.
+								\end{cases}
+\end{align*}
+And dually for $EX\varphi$ exchanging \texttt{F} and \texttt{T}. 
+\end{definition}
+
+\subsection{Expanding KMTS into CTL models}
+
+In this section we formally define a KMTS expansion into a set of Kripke structures showing its capacity to compactly represent CTL models and some limitations of this representation.
+
+\begin{definition}
+Let \kmtsdef be a KMTS, the KMTS expansion of $M$, denoted by \emph{M$_{\mbox{\scriptsize K}}$}, is the set of all Kripke models \ksdef['] such that $AP'=AP$, $S'=S$, $S'_{0}=S_{0}$, $R^+ \subseteq R' \subseteq R^-$and $L(s) \subseteq L'(s)$, for all $s \in S$.  
+\end{definition}
+
+The KMTS expansion may lead to an exponential set of Kripke models, as stated in Proposition \ref{prpExpan}. On the other hand, it shows the capacity of this formalism to compactly represent a huge set of CTL models in one single structure. It is important to note that KMTS may not be expressive enough to represent all possible sets of CTL models, as shown in Proposition \ref{prpKMTSRepr}.
+
+\begin{proposition}\label{prpExpan}
+Let \kmtsdef be a KMTS with $ m=|R^- \backslash R^+|$ genuine (strictly) may transitions and $n= |\{s \in S ~|~ p \in AP$ and $p, \neg p \not\in L(s)\}|$ state indeterminations. $M$ can be expanded into $2^{m+n}$ Kripke structures.
+\begin{proof}
+It follows straight from the number of possible combinations of each KMTS indetermination that can be realized or not in the Kripke structures. 
+\end{proof}
+\end{proposition}
+
+\begin{proposition}\label{prpKMTSRepr}
+Let $K = \{k_{1},...,k_{n}\}$ any set of kripke structures $k_{i} = \langle AP, S,$ $S_{0},R_{i}, L_{i}\rangle$. Not necessarily exists a KMTS \kmtsdef that can be expanded into $K$.
+\begin{proof}
+Take for example $K = \{k_3, k_5\}$ of Figure \ref{figKMTSeExpan}(b). No KMTS $M = \langle \{p\}, \{s_{0},$ $ s_{1}, s_{2}\}, \{s_{0}\}, \{(s_{0}, s_{0}), (s_{1}, s_{2})\}, R_{-}, L\}\rangle$ can be expanded in this set. This is because the KMTS formalism does not provide any way of expressing interdependency between indeterminations. In this example, we could not express in $M$ that the transitions $(s_0,s_1)$ and $(s_0,s_2)$ should not occur at the same time. 
+\end{proof}
+\end{proposition}
+
+%\begin{proposition}\label{prpKMTSRepr}
+%Not all sets of Kripke structures can be represented by exactly one KMTS.  
+%\begin{proof}
+%Take for example the models $k_3$ and $k_5$ of Figure \ref{figKMTSeExpan}(b). No single KMTS could precisely represent this set. This is because the KMTS formalism does not provide any way of expressing interdependency between indeterminations. In this example, we could not express in a KMTS that the transitions $(s_0,s_1)$ and $(s_0,s_2)$ should not occur at the same time. 
+%\end{proof}
+%\end{proposition}
+
+To represent any set of Kripke structures we have two alternatives: (1) to associate a selection function to a KMTS that selects the desired Kripke models among its expanded models; (2) to consider a set of KMTS models that represent the set of Kripke models. In the second alternative, in the worse case, each KMTS will be a Kripke model.
+
+\begin{proposition}\label{prpKMTSSem}
+Let M be a KMTS and $K = \{k_{1},..., k_{n}\}$ the Kripke structures expanded from $M$. Consider $s_{0}$ the initial state of $M$. For all closed formula $\varphi$ of $\mu-calculus$, if the semantic value of $\left\|\varphi\right\|^{M}_{3}(s_{0})$ is equal to
+\vspace*{-0.3cm}
+\begin{enumerate}
+\item $\bot$, then $\exists k_{i}, k_{j} \in K, i\neq j$ such that $\left(\|\varphi\right\|^{k_{i}}(s_{0}) = T$ and 
+$\left\|\varphi\right\|^{k_{j}}(s_{0}) = F$
+\item $T$, then $\forall k_{i} \in K, \left\|\varphi\right\|^{k_{i}}(s_{0}) = T$
+\item $F$, then $\forall k_{i} \in K, \left\|\varphi\right\|^{k_{i}}(s_{0}) = F$
+\end{enumerate}
+Proof. It follows straight from the semantics of KMTS and the expansion of it. 
+%The proof is immediate from the semantics of KMTS and the expansion of it.
+%Let's consider only the case $\bot$. If $\varphi = A\alpha$ then there is at least a may path $\pi$ such that $\alpha$ is false in $\pi$ and for all must paths $\alpha$ is true in the path. Let $\pi = s_{0}, s_{1}, ...$ be a may path where $\alpha$ is false and consider a structure $k_i$ expanded from the KMTS in which the path $\pi = s_{0}, s_{1}, ...$. $\alpha$ is false in $\pi$ and $\varphi$ is false in $k_i$. Consider now another structure K that does not contain any path equal to a may path of the KMTS where $\alpha$ is false. So $\alpha$ is true in all paths of K and $\varphi$ is true in $k_i$. If $\varphi = E\alpha$ the proof is similar. \\
+\end{proposition}
+
+\vspace*{-0.6cm}
+\section{Revision of KMTS Models}
+\label{secRevKMTS}
+
+In this section we define the KMTS model revision operation, through the specification of minimal change criterion over KMTS models and showing its correspondence to the minimal changes over sets of KMTS expanded Kripke models. This minimality criterion is similar to that proposed by \cite{Pau10}, but now considering a different set of primitive operations which represent possibilities of changes in KMTS models, as shown below.  
+
+\begin{enumerate} 
+\item[] {P1:} Removing one pair from the relation $R^{-}$
+\item[] {P2:} Removing one pair from the relation $R^{+}$
+\item[] {P3:} Transforming one pair $(s_{i},s_{j})$ of $R^{-}$ to $(s_{i},s_{j})$ of $R^{+}$
+\item[] {P4:} Changing a defined literal on one state label 
+\item[] {P5:} Assigning a literal to a a state label if it is undefined in it 
+\end{enumerate}
+
+For the definitions below we consider some notation. $X_{Pn}$ denotes a set of changes relative to operation $P_{n}, 1 \leq n \leq  5$. Each change in $X_{Pn}$ is represented as $(s_{i}, s_{j})$ or $(s_{i},l)$, where $l$ is a literal, depending on whether the change is relative to transitions or to state labels, respectively. A change $X$ is represented as $X = (X_{P1},..., X_{P5})$, where $X_{Pn}$ can be an empty set if no change of type $P_{n}$ occurs. We say that $X = (X_{P1},..., X_{P5})  \subset  Y = (Y_{P1},..., Y_{P5})$ if for each $X_{Pn} \subseteq Y_{Pn}$ and at least one $X_{Pi} \subset Y_{Pi}$. The application of $X$ to a model $A$ results in another model denoted by $A(X)$. We refer to $M,s_{0} \models \varphi$ is $True$, $False$ or $\bot$ to indicate the result of model checking $\varphi$ in $M$ from $s_{0}$. 
+
+Our definition of minimal change over KMTS is based on the operations P2 and P4, the operations P1, P3 and P5 are disregarded. This makes sense because among the Kripke models expanded of the KMTS there are models without the transitions of P1, which already have the transitions of case P3, and those where the state label already has the literal of P5 assigned. In this sense, these modifications should not be considered for all models. We then define minimal changes considering a reduced change $X/$ of a change $X$ as defined below.
+
+\begin{definition}
+Let $X = (X_{P1},..., X_{P5})$, the reduced change $X/$ of $X$ is defined as $X/ = (X_{P2},X_{P4})$. 
+\end{definition}
+
+A reduced change $X/ = (X_{P2}, X_{P4})$ over a KMTS $M$ induces changes in $K \in M_{K}$: all $(s_{i}, s_{j}) \in X_{P2}$ induces a change $(s_{i}, s_{j})$ of type $PU2$ in $K$ and all $(s_{i}, l) \in X_{P4}$ induces a change $(s_{i}, l)$ of type $PU3$ in $K$. So, we also refer $X_{P2}$ and $X_{P4}$ as changes over $K$ meaning its corresponding induced changes.
+
+%Sometimes we may refer to an application of an operation $Y = (Y_{P2},Y_{P4})$ to a Kripke model $K$. Formally, $Y_{P2}$ and $Y_{P4}$ are simulated in $K$ by operations PU2 and PU3, respectively.
+
+\begin{definition}
+Given two changes $X1 = (X1_{P1},...,X1_{P5})$ and $X2 = (X2_{P1},...,$ $X2_{P5})$, $X1 \leq X2$ iff for all $n$, $X1/_{Pn} \subseteq X2/_{Pn}$. $X1 < X2$ iff $X1 \leq X2$ and there is at least one $n$, such that $X1/_{Pn} \subset X2/_{Pn}$. If there is no $X2$ such that $X2 < X1$, $X1$ is said to be minimal.
+\end{definition}
+
+Propositions \ref{proKMTSChg}, \ref{proKMTSMin} and \ref{proKMTSMinKpk} show that the defined minimality criterion for KMTS correspond to the minimality criterion (presented in section \ref{secCTLModRev}) for the set of Kripke models expanded of the KMTS, i.e. the revision of a set of Kripke models can be achieved by the revision of a KMTS that represents them. The next proposition specifies that any change in a Kripke model, that belongs to $M_{K}$, can be achieved through a change in $M$.
+
+\begin{proposition} \label{proKMTSChg}
+Let $M$ be a KMTS, $M_{K}$ its corresponding expansion, $K1$ a model in $M_{K}$ and $Y = (Y_{P2}, Y_{P4})$ a change in $K1$. Then there is a change $X$ in $M$ such that $M(X)_{K}$ contains the model $K1(Y)$.
+\begin{proof}
+Construct $X = (X_{P1}, X_{P2}, X_{P3}, X_{P4}, X_{P5})$: $X_{P1}$ contains all $(s_{i},s_{j})$ may transitions such that $(s_{i},s_{j})$ are not transitions of $K1$; $X_{P2}$ contains $(s_{i},s_{j}) $ $\in Y_{P2}$ if $(s_{i},s_{j})$ is a must transition in $M$, otherwise $(s_{i},s_{j})$ is included in $X_{P1}$; $X_{P3}$ contains all $(s_{i},s_{j})$ may transitions which correspond to $(s_{i},s_{j})$ transitions of $K1$; $X_{P4}$ contains $(s_{i},l) \in Y_{P4}$ if $l$ or $\neg l \in label(s_{i})$ in $M$, otherwise include it in $X_{P5}$. Take a model $K2$ from $M_{K}$ which  differs from $K1$ in two ways: 1) for all $(s_{i},l) \in X_{P5}, l \in label(s_{i})$ in $K2$; 2) $K2$ does not have the transitions $(s_{i},s_{j})$ of $Y_{P2}$ if they are may transitions in $M$ ($K2$ exists because the expansion of $M$ generates all Kripke models resulting from all the possibilities of transforming indetermination in $M$ in determinations in Kripke models, in the best case $K2 = K1$ and $X/ = Y$). Therefore $M(X)_{K}$ contains the 
+model $K2(X/)$ which is equal to $K1(Y)$.
+\end{proof}
+\end{proposition}
+
+\begin{proposition} \label{proKMTSMin}
+Let $M$ be a KMTS and $X = (X_{P1},X_{P2},X_{P3},X_{P4},X_{P5})$ be a minimal change in $M$. Then $X/ =(X_{P2},X_{P4})$ is a minimal change in $M_{K}$.
+\begin{proof}
+Suppose $X/$ is not minimal in $M_{K}$, so there is a change $Y = (Y_{P2}, Y_{P4})$ in $M_{K}$ such that $Y < X/$. The transitions of $Y_{P2}$ are not may transitions in $M$ and all literals of the states in $Y_{P4}$ are defined literals in the respective states in $M$. By the proposition \ref{proKMTSChg} there is a change $Z$ in $M$ constructed from $Y$ such that $Z/ = Y$. So, $Z/ < X/$ which implies that $Z < X$, a contradiction. 
+\end{proof}
+\end{proposition}
+
+\begin{proposition} \label{proKMTSMinKpk}
+Let $M$ be a KMTS such that $M,s_{0} \models \varphi$ is False, $X = (X_{P1}, $ $X_{P2}, X_{P3}, X_{P4}, X_{P5})$ a minimal change in $M$ such that $M(X),s_{0} \models \varphi$ is True. So, there is a model $K$ in $M_{K}$ such that $K(X/),s_{0} \models \varphi$ is True. 
+\begin{proof}
+Take a model $K$ of $M_{K}$ such that $K$ does not have the transitions of $X_{P1}$, has the transitions of $X_{P3}$ if $X_{P3} \neq \emptyset$  and for all $(s_{i},l)$ in $X_{P5}$, $l \in$ labels of $s_{i}$ of $K$. For all $K_{i}$ of $M(X)_{K}$, $K_{i},s_{0} \models \varphi$ is True because $M(X),s_{0} \models \varphi$ is True (see proposition \ref{prpKMTSSem}). The model $K(X/)$ is one of the $K_{i}$ models.
+\end{proof}
+\end{proposition} 
+
+\vspace*{-0.5cm}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{FigRevKMTS1.pdf}
+\caption{Revision by AX$p$ of the KMTS M (Fig. \ref{figKMTSeExpan}(a)).}
+\label{figRevKMTS1}
+\end{figure}
+\vspace*{-0.5cm}
+
+Figures \ref{figRevKMTS1} and \ref{figRevKripke1} show an example of the relation between minimal changes of a KMTS $M$ and minimal changes of the set $M_{K}$. They present the minimal possible changes (with the operations $P_{1}$ to $P_{5}$ above) in $M$ to satisfy the property $AXp$ from $s_{0}$ and their respective reduced changes which correspond to the minimal changes of $M_{K}$. Consider the change $X = (\emptyset,\emptyset,\emptyset,\left\{(s_{0},p), (s_{2},p)\right\},\left\{(s_{1},p)\right\})$, it is not minimal because $X1 < X$. To exemplify the Proposition \ref{proKMTSChg} consider the model $K_{4}$ (Fig. \ref{figKMTSeExpan}(b)) and the change $Y = (\emptyset,\left\{(s_{0},p), (s_{1},p)\right\})$, the model $K_{4}(Y) = K_{3}(X_{2}/)$. As an example of Proposition \ref{proKMTSMinKpk}, consider the model $K_{3}$ (Fig. \ref{figKMTSeExpan}(b)) and the change $X_{1}$ of $M$ (Fig. \ref{figRevKMTS1}), $M(X_{1}),s_{0} \models AXp$ is $True$ and $K_{3}(X_{1}/),s_{0} \models AXp$ is $True$.  
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{FigRevKripke1.pdf}
+\caption{Revision by AX$p$ of the expansion M$_{\mbox{\scriptsize K}}$ (Fig \ref{figKMTSeExpan}(b)).}
+\label{figRevKripke1}
+\vspace*{-0.5cm}
+\end{figure}
+
+In the case that the KMTS model checking returns $\bot$, the KMTS revision selects among its expanded Kripke models those that are consistent with the verified property. This result is aligned to the result produced by the operator $ \circ_c $. When the KMTS model checking returns $false$, changes effectively modify the KMTS model. As stated before in this paper we consider only changes in state labels and removal of transitions. Although these changes seem relatively restrictive, the results presented in this paper are still relevant to domains where the KMTS completely defines the consistent information, and thus no other information such as new states can be added. Our approach is also a step forward in the definition of a general KMTS revision operator with all kinds of changes, which we intend to define afterwards. 
+
+\section{Implementing Revision of KMTS Models}
+\label{secImpl}
+
+The revision of a KMTS model $M$ might occur when $M,s_{0} \models \varphi$ is $\bot$ or $F$. In case $\bot$ the revision consists of refining the KMTS to be expanded into only Kripke structures where the required property is satisfied. In case $F$, the KMTS should be repaired resulting in KMTSs where model checking results in  $T$ causing changes in the expanded Kripke structures. 
+
+In this section we present the 3-valued model checking game proposed by Grumberg in \cite{GLLS07} and our proposal of an abstract algorithm over this game to refine a KMTS model. 
+%The algorithm to repair the KMTS in case $F$ is not presented in this paper, but we make some considerations about it.
+
+\subsection{The 3-valued Model Checking Game} \label{secModCheGame}
+In the $\mu-calculus$ 3-valued model checking game proposed in \cite{GLLS07}, Grumberg introduces the concept of non-losing strategy to identify the causes of $\bot$ in model checking besides the known concept of winning strategy. These games are defined between two players, $\exists$ and $\forall$, where the player $\exists$ tries to verify the formula and the $\forall$ tries to refute the formula. 
+
+The game for model checking a formula $\varphi$ consists of a graph of configurations of type $s \vdash \psi$ where $s$ is a state of the model and $\psi$ is a subformula of $\varphi$. These configurations are determined from the decomposition of the formula $\varphi$ in its subformulas according to the rules presented in Figure \ref{figRules1}, considering the states and transitions of the KMTS model. 
+
+In Figure \ref{figGame1} we show an example of a graph of configurations of a 3-valued model checking game. A configuration is classified as a $\exists$ configuration when $\psi$ is of the form of the antecedent of an $\exists$ rule and is represented as an ellipse in the game graph and is classified as a $\forall$ configuration if $\psi$ is of the form of the antecedent of an $\forall$ rule and is represented as a rectangle in the game graph. Dotted edges correspond to KMTS genuine may transitions $(R_{-} \backslash R_{+})$ and normal edges correspond to both KMTS must transitions and other moves generated from the rules that do not involve transitions of the model.
+
+The players move from their configurations according to a strategy. A strategy of a player $\sigma$ is a function between its configurations and all the configurations of the game graph. A winning strategy of player $\sigma$ is such that it makes $\sigma$ win a game independent of the strategy used by the other player.  When neither players win the game, both of them have a non-losing strategy and the game results $\bot$. For example, in Figure \ref{figGame1} the bold edges are part of non-losing strategies of the $\forall$ player.  
+
+\vspace*{-0.5cm}
+\begin{figure}[h]
+\begin{center}
+\resizebox{0.8\textwidth}{!}{% 
+\begin{tabular}{|l l|} 
+\hline
+Rules of player $\exists$: \hspace{1.5cm}  & \\ [-0.5ex]
+&\\[-1ex]
+$\cfrac{s \vdash \psi_0 \lor \psi_1}{s \vdash \psi_i} : i \in \{0, 1\}$  & $\cfrac{s \vdash EX\psi}{t \vdash \psi} : R^+(s,t) \mbox{ or } R^-(s,t)$  \\ [-1ex]
+&\\[-1ex]
+$\cfrac{s \vdash \eta Z.\psi}{s \vdash Z} : \eta \in \{\mu, \upsilon\}$ & $\begin{array} {lcl} \cfrac{s \vdash Z}{s \vdash \psi} &  &: \mbox{if } f_p(Z) = \eta Z.\psi,\eta \in \{\mu, \upsilon\}, \mbox{ and } f_p(Z)\\[-1ex] &  &  \mbox{is the unique subformula identified by } Z \end{array}$ \\ [-1ex]
+&\\[-0.5ex]
+Rules of player $\forall$: & \\ [-1ex]
+&\\[-1ex]
+$\cfrac{s \vdash \psi_0 \land \psi_1}{s \vdash \psi_i} : i \in \{0, 1\}$ & $\cfrac{s \vdash AX\psi}{t \vdash \psi} : R^+(s,t) \mbox{ or } R^-(s,t)$  \\ 
+\hline
+\end{tabular} 
+}
+\end{center}
+\vspace*{-0.5cm}
+\caption{Rules of the model checking game}
+\label{figRules1}
+\end{figure}
+\vspace*{-0.5cm}
+
+A play can be finite or infinite and it is defined as a sequence of configurations $C_{0}, C_{1}, ...$ such that there is an edge from $C_{i}$ to $C_{i+1}$. Each configuration of the graph is colored depending on the result of all plays starting from this configuration: with $T$ if the player $\exists$ wins, with $F$ if the player $\forall$ wins, or $\bot$ if both players do not win (or do not lose). A necessary condition for a player to win a play is to obey the restriction that all of his/her movements in the configurations of the play are through normal edges, meaning that the player does not move between configurations that corresponds to genuine may transitions of the model. Moreover, there are other conditions to determine the winner of a play as presented below.
+
+\begin{itemize}
+\item[] Conditions for the player $\exists$ win a play $C_{0}, C_{1}, ...$:
+\begin{enumerate}
+\item To exist a $n \in N$ such that $C_{n} = t \vdash l$ and the state $t$ of the model is labelled with $l$ or
+\item To exist a $n \in N$ such that $C_{n} = t \vdash AX \psi$ and there does not exist $t' \in S$ such that $(t,t')$ is a transition in the model or
+\item the outermost variable that occurs infinitely often is of type $\upsilon$
+\end{enumerate}
+\end{itemize}
+
+\begin{itemize}
+\item[] Conditions for the player $\forall$ win a play $C_{0}, C_{1}, ...$:
+\begin{enumerate}
+\item To exist a $n \in N$ such that $C_{n} = t \vdash l$ and the state $t$ of the model is labelled with $\neg l$ or
+\item to exist a $n \in N$ such that $C_{n} = t \vdash EX \psi$ and does not exits $t' \in S$ such that $(t,t')$ is a transition in the model or
+\item the outermost variable that occurs infinitely often is of type $\mu$
+\end{enumerate}
+\end{itemize}
+
+If neither player wins a play, the result of it is $\bot$, meaning that both players have a non-losing strategy for that play. A player wins a game if he/she wins all the plays in the game from the initial configuration ($s_{0} \vdash \varphi$).
+
+To calculate the result of the game, one can color each configuration of the graph bottom up with $T$, $F$ or $\bot$ depending on whether $\exists$ has a winning strategy, or $\forall$ has a winning strategy, or both players have a non-losing strategy, respectively, in all plays starting from that configuration. Initially the deadend configurations are colored (a deadend configuration is one that does not reach another configuration), then the coloring proceeds to other configurations taking other plays until all the configurations are colored as explained in next section. The result of the game will be the color of the root node of the graph (configuration $s_{0} \vdash \varphi$). Figure \ref{figGame1} presents a game graph with the colored configurations (represented by the symbols enclosed in parenthesis inside the node of the configuration) and with edges that belong to the non-losing strategies of player $\forall$, represented as bold edges.  
+
+%\vspace{-.3cm}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{FigGame1.pdf}
+\vspace*{-0.5cm}
+\caption{Example of failure witnesses of non-losing strategy of player $\forall$}
+\label{figGame1}
+\end{figure}
+\vspace{-.5cm}
+
+\subsection{Implementing KMTS Repair}
+
+In this section we develop an algorithm to refine the KMTS (case $M,s_{0} \models \varphi$ is $\bot$) based on the repair of the 3-valued model checking game. The algorithm considers non-losing strategies (that are not winning strategies) for both players $\forall$ and $\exists$ defined in \cite{GLLS07} to determine the witnesses of the failure. Our algorithm consists of reducing the KMTS to represent only the Kripke structures that satisfy the property $\varphi$ by eliminating genuine may transitions, or transforming genuine may transitions into must transitions, or changing the labels of undefined states. At the end of this section we present a quick overview of an algorithm to implement the repair when $M,s_{0} \models \varphi$ is $False$. 
+
+From now on we will refer to the configurations of the game as nodes. Let $\psi$ be a subformula of $\varphi$. We define a witness of a failure in case $M,s_{0} \models \psi$ is $\bot$ one of the following transitions, which belongs to non-losing strategies of $\forall$ or $\exists$, found bottom up in the game graph: (1) a genuine may edge, coming from a node of type AX colored $\bot$, to a child node colored $F$ or $\bot$, (2) a genuine may edge, coming from a node of type EX colored $\bot$, to a child node colored $T$ or $\bot$, (3) a must edge, coming from a node of type EX colored $\bot$, to a child node colored $\bot$, (4) an edge coming from a node of type $s_{i} \vdash l \wedge \psi$ to a node $s_{i} \vdash l$ colored with $\bot$, (5) an edge from a node of type $s_{i} \vdash l \vee \psi$ where its child node $s_{i} \vdash l$ is colored with $\bot$ and the other child is colored $\bot$ or $F$. In Figure \ref{figGame1} the bold edges are examples of failure witnesses.
+%From now on we will refer to the configurations of the game as nodes. Let $\psi$ be a subformula of $\varphi$. We define a witness of a failure in case $M,s_{0} \models \psi$ is $\bot$ one of the following transitions found bottom up in the game graph: (1) a genuine may edge, coming from a node of type AX colored $\bot$ which belongs to non-losing strategies of $\forall$, to a child node colored $F$ or $\bot$, (2) a genuine may edge, coming from a node of type EX colored $\bot$ which belongs to non-losing strategies of $\exists$, to a child node colored $T$ or $\bot$, (3) a must edge, coming from a node of type EX colored $\bot$ which belongs to non-losing strategies of $\exists$, to a child node colored $\bot$, (4) an edge coming from a node of type $s_{i} \vdash l \wedge \psi$ to a node $s_{i} \vdash l$ colored with $\bot$ which belongs to non-losing strategies of $\forall$, (5) an edge from a node of type $s_{i} \vdash l \vee \psi$ where its child node $s_{i} \vdash l$ is colored with $\bot$ and the other child is colored $\bot$ or $F$. In Figure \ref{figGame1} the bold edges are examples of failure witnesses.
+%The failures witnesses (1) to (3) are determined from non-losing strategies of the players, but not all 
+%failures witnesses of type (4) are part of a non-losing strategy, as for example in \ref{figGame1}, the edge to the node $15$ is a witness failure but it is not part of a non-loosing strategy of player $\exists$. 
+
+In order to obtain all the Kripke models that satisfy the property, all failure witnesses might be considered, resulting in different KMTSs. It is not necessary to consider all possible combinations of changes in order to generate all possible Kripke models because the KMTS expresses possibilities by the may transitions. For example if a node $s_{0} \vdash EXp$ colored $\bot$ has two may children nodes $s_{1} \vdash p, s_{2} \vdash p$ both colored $T$, it is enough to change only one may edge at a time (to be a must edge), because the resultant KMTSs expresses the Kripke models with both transitions as must.
+
+%\vspace*{-0.5cm}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{FigKMTS1.pdf}
+\caption{Example of KMTS refinement}
+\label{figKmts1}
+\end{figure}
+\vspace*{-0.5cm}
+
+The algorithm Revision-game controls the refinements of the model $M$ from the sequence of failure witnesses (Fwitness) identified by procedure Check-model, which determines them from a the 3-valued model checker game. One failure of Fwitness at a time is processed by Refine-game until no more failures exists in Fwitness. For the game of Figure \ref{figGame1}, Fwitness will be initialized with the sequence of failure witnesses $((7,8), (16,13), (14,15))$, where a pair $(m,n)$ represents the edge from the node $m$ to the node $n$ of the game. Other failure witnesses are considered by Refine-game to complement the change $X = (\left\{(s_{1},s_{0})\right\}, \emptyset, \emptyset, \emptyset, \emptyset)$ such as $(5,6)$ and $(16,13)$. The algorithm returns $4$ KMTSs (see Figure \ref{figKmts1}) that satisfy $\varphi$ with the changes: (1) $X = (\left\{(s_{1},s_{0})\right\}, \emptyset, \emptyset, \emptyset, \left\{(s_{1},\neg m)\right\})$, (2) $X = (\{(s_{1},s_{0}), (s_{1},s_{1})\}, \emptyset, \emptyset, \emptyset, \emptyset)$, (3) $X = (\left\{(s_{1},s_{1})\right\},$ $ \emptyset, \emptyset, \emptyset, \emptyset)$, (4) $X = (\emptyset, \emptyset, \emptyset, \emptyset, \left\{(s_{1},m)\right\})$. 
+
+%The algorithm Revision-game controls the refinements of the model $M$ from the sequence of failure witnesses (Fwitness) identified by procedure Check-model, which determines them from a the 3-valued model checker game. One failure of Fwitness at a time is processed by Refine-game until no more failures exists in Fwitness. For the game of Figure \ref{figGame1}, Fwitness will be initialized with the sequence of failure witnesses $((7,8), (16,13), (14,15), (5,6))$, where a pair $(m,n)$ represents the edge from the node $m$ to the node $n$ of the game. Other failure witnesses are considered by Refine-game to complement the change $X = (\left\{(s_{1},s_{0})\right\}, \emptyset, \emptyset, \emptyset, \emptyset)$ such as $(5,6)$ and $(16,13)$. The algorithm returns $4$ KMTSs (see Figure \ref{figKmts1}) that satisfy $\varphi$ with the changes: (1) $X = (\left\{(s_{1},s_{0})\right\}, \emptyset, \emptyset, \emptyset, \left\{(s_{1},\neg m)\right\})$, (2) $X = (\{(s_{1},s_{0}), (s_{1},s_{1})\}, \emptyset, \emptyset, \emptyset, \emptyset)$, (3) $X = (\left\{(s_{1},s_{1})\right\},$ $ \emptyset, \emptyset, \emptyset, \emptyset)$, (4) $X = (\emptyset, \emptyset, \emptyset, \emptyset, \left\{(s_{1},m)\right\})$. The failure (5,6) NAO TRATAMOS, ESQUECI.
+
+The algorithm Refine-game controls the possible refinements from a failure witness of Fwitness. Each change $X$ is used to the modification and recoloring of the game graph by Recolor-game (which is supposed to call the 3-valued model cheker). A change is done relative to the model, i.e., if an edge $(m,n)$ corresponds to the transition ($s_{i}$, $s_{j}$) in the model, all edges $(r, s)$ which correspond to ($s_{i}$, $s_{j}$) should be removed of the game graph and if the subgraphs from nodes $s$ are no more accessible from the root node they must be desconsidered by other search for failure witnesses. If the model checker results $\bot$, all the other failure witnesses in Nwitness (determined by Recolor-game) are considered (one at a time) to complement $X$ by call Refine-game recursively. When the result of model checking is $T$ the model $M(X)$ is returned, the game is restored to a previous state in order to other failures witnesses from Nwitness be considered and achieve all possible complementations for the change $X$. 
+ 
+The algorithm Refine-play generates the change $X$ according to Failure = $(m,n)$, i.e., the change generated depends on the cause of the failure which is relative to the node $m$ or $n$. Consider node $m$ of type $(s_{i} \vdash \psi)$ and $n$ of type $(s_{j} \vdash \chi)$. Node $m$ can be: a $AX$ node ($s_{i} \vdash AX\psi$), a $EX$ node ($s_{i} \vdash EX\psi$), a disjunctive node of type $s_{i} \vdash \psi \vee l$, or a conjunctive node of type $s_{i} \vdash \psi \wedge l$. The conditions specified in the algorithm cover the cases described below that represent the possible changes required.  
+
+A node $EX$ is true if it has a must child colored with true, it is false if all its may children are false and otherwise it is $\bot$. If node $m$ is a $EX$ node and $n$ is colored $T$ and $(m,n)$ is a may transition, it should be transformed into a must transition. A may edge to a node of type $s_{k} \vdash V$ that represents loop in the graph and $V$ is a greatest fixpoint variable ($\nu$) (formulas of type $EG$) is also changed to must. A node $AX$ is true if all its may (including must) children are colored true, it is false if it has a must child colored false, otherwise it is $\bot$. If node $n$ is colored $F$ or $\bot$ (not of type $s_{j} \vdash l$) the may transition $(m,n)$ should be cut, if it is $\bot$ and of type $s_{j} \vdash l$  two alternatives exits: the label of $s_{j}$ is changed to contain $l$ or the transition is cut. To consider both alternatives when a failure witness of this type is found then this failure witness $(m,n)$ is duplicated in the sequence of witnesses (Fwitness or Nwitness) and in the second one the node is represented as a negative number ($-n$). A node $s_{i} \vdash \psi \wedge l$ is colored $\bot$ if it does not have a child colored $F$ and has one or both children colored $\bot$. So, if node $n$ of type $s_{j} \vdash l$ is colored $\bot$ the label of $s_{j}$ should be changed. A node $s_{i} \vdash \psi \vee \chi$ is colored $\bot$ if it does not have a child colored $T$ and has a child colored $\bot$. So, if node $n$ of type $s_{i} \vdash l$ is colored $\bot$ its label should be changed.
+
+%A may edge to a node of type $s_{k} \vdash V$, that represents loop in the graph, in case $V = \mu$, i.e, it is a least fixpoint variable (formulas of type $AF$) should be cutted. 
+\begin{algorithm}[h]
+\caption{Revision-game()}
+\label{algRevGame}
+\KwIn{KMTS M to revise, property $\varphi$  /* $X$ is declared as a global variable */}
+\KwOut{KMTSs resultant of the changes with $s_{0} \vdash \varphi$ colored $T$}
+\BlankLine 
+   Read($M$, $\varphi$) \;
+   Check-model($M$, $\varphi$, Fwitness); /* returns a 3-valued model checking game graph and the possible failure witnesses in case $s_{0} \vdash \varphi$ colored $\bot$ */\\
+	\If{$s_{0} \vdash \varphi$ colored $\bot$}{
+	   \Repeat{Fwitness = nil}{
+		    X := () \;
+	      Refine-game(Fwitness, X) \;
+				Restore-game(head(Fwitness)) \;
+		    Fwitness := tail(Fwitness) \;}
+%		    X= () \;} 
+	}
+\end{algorithm}
+	 				
+\begin{algorithm}[h]
+\caption{Refine-game(Fwitness, X)}
+\label{algRefGame}
+\KwIn{Fwitness  - sequence of pairs $(m,n)$ determining the failure witness edges}
+\KwOut{KMTSs resultant of the changes with $s_{0} \vdash \varphi$ colored $T$}
+\BlankLine
+	   Failure := head(Fwitness)\; 
+	   Refine-play(Failure, X); /* X contains the changes to be done */\\
+		 Recolor-game($\varphi$, Nwitness, X); /* other failure witnesses are put in Nwitness if they exists ($s_{0} \vdash \varphi$ is colored $\bot$) */\\
+	   \uIf{$s_{0} \vdash \varphi$ is colored $T$}{ 
+					Return $M(X)$ \;
+					Restore-game(Failure) /* the game is restored by removing the change corresponding to Failure \;
+					} 
+		 \ElseIf{$s_{0} \vdash \varphi$ is colored $\bot$}{
+%		     \Repeat{Nwtiness = nil}{
+%					   \If {Nwitness $\neq$ nil} {
+%						     Refine-game(Nwitness, X) \;
+%					       Nwitness := tail(Nwitness) \;
+%					   }
+%		     }
+		     \While{Nwtiness $\neq$ nil}{
+						     Refine-game(Nwitness, X) \;
+					       Nwitness := tail(Nwitness) \;
+		     }
+		 }
+	\end{algorithm}
+	
+\begin{algorithm}[h!]
+\caption{Refine-play(Change, X)}
+\label{algRefPlay}
+\KwIn{Failure = $(m,n)$ such that node $m$ is colored $\bot$ and is of type $s_{i} \vdash \psi$ and node $n$ is of type $s_{j} \vdash \chi$}
+\KwOut{Changes X}
+	\BlankLine
+	\uIf{node $m$ is of type $s_{i} \vdash EX\psi$ and $n$ is colored $T$ or ($\psi = V$ and $V$ is a variable of type $\nu$ and $n$ is colored $\bot$ and $(m,n)$ represents a loop in the game graph} {
+		$X.P_{3}$ := $X.P_{3} \cup \left\{(s_{i},s_{j})\right\}$\;
+	}
+	\uElseIf{node $m$ is of type $s_{i} \vdash AX\psi$}{
+	    \uIf{node $n$ is colored $F$ or $n$ is not of type $s_{j} \vdash l$ and is colored $\bot$} {
+			   $X.P_{1}$ := $X.P_{1} \cup \left\{(s_{i},s_{j})\right\}$ \;
+   		}
+	    	\ElseIf{node $n$ is of type $s_{j} \vdash l$ and is colored $\bot$}{
+	    		\leIf{$n > 0$}{
+				$X.P_{5}$ := $X.P_{5} \cup \left\{(s_{j},l)\right\}$\;   
+			}{
+				$X.P_{1}$ := $X.P_{1} \cup \left\{(s_{i},s_{j})\right\}$
+			}
+	  	}
+	}
+	\If{node $n$ is of type $s_{j} \vdash l$ and $m$ is not of type $s_{i} \vdash AX\psi$} {
+		$X.P_{5}$ := $X.P_{5} \cup \left\{(s_{j},l)\right\}$\;
+	}
+\end{algorithm}
+
+For the implementation of the repair of the KMTS when a property is inconsistent with the model, a similar algorithm used for the refinement can be developed. Winning strategies of player $\forall$ instead of non-losing strategies should now be considered to identify some failure witnesses, combined with other failures witnesses such as deadends nodes colored with $F$. The algorithm can proceed also from bottom up changing labels or eliminating transitions that are causes of the failure in the game. 
+
+\section{Final Remarks}
+\label{secFinRem}
+As addressed before, general sets of Kripke structures cannot be represented by a single KMTS (Proposition \ref{prpKMTSRepr}). A solution is to generalize KMTS revision to deal with a set of KMTS instead of a single model. This solution increases the revision complexity, but it is upperbounded by the complexity of CTL revision (in the worst case, each KMTS will be a Kripke structure). The set of KMTS still have on average a more compact representation, which allows the development of more efficient revision methods.
+ 
+Revision over KMTS structures is significantly more efficient than Kripke revision. For example, the revision of the models of Figure \ref{figRevKripke1} produces 32 repair candidates, which have to be compared to the 8 initial models in order to select the minimal ones, which involve approximately 256 comparisons. This computation can be even more complicated if it involves a fixpoint formula as EF or AG, in the sense that it increases the number of repair candidates greatly, as the number of redundant or useless change to achieve them. On the other hand, the KMTS revision is almost straightforward from $M$ to the solution set of 4 KMTS, with almost no redundant or useless modifications. The algorithms used for the repair were specified over 3-valued model checking game which can be implemented as two $\mu -calculus$ 2-valued model checking game \cite{GLLS07}. It is noteworthy that $\mu -calculus$ 2-valued model checking game for CTL is linear in time. %TODO In relation to space complexity, the repair algorithms 
+%need all the game board but considering a KMTS as representing a significant number of CTL models ... 
+%Paulo veja ai deixei para voce concluir se achar que devemos considerar esta questao de espa�o ....
+
+\subsection{Related work}
+
+%Few authors have explored this enrichment of model checking with well-known change theories. 
+Zhang and Ding \cite{ZD08} proposed the first approach on this line, improving model checking with belief update theory \cite{KM91}. As shown in \cite{GW10}, the choice of a belief revision approach, rather then belief update, may avoid some unnecessary loss of information in static contexts. Zhang and Ding \cite{ZD08} do not deal with partial system information. Belief revision principles were adopted in \cite{GW10}, but with no focus on partial system information. Although their framework may deal with partial information by handling sets of models, its lack of a compact representation like KMTS that can make it difficult to be used in real applications. Grumberg \cite{Gru11} addresses KMTS representation, but the context is abstract model checking, where a KMTS model represents an abstraction of a concrete Kripke structure. Grumberg also proposes an algorithm based on 3-valued model checking to refine a KMTS  with a different proposal  which consists in expanding an abstract state of the KMTS (with some undefined literal) into concrete states (states of the concrete Kripke structure that was abstracted in the KMTS). Finally, in \cite{CBSK12}, the authors deal with KMTS and develop an algorithm, not using 3-valued model checking, to repair KMTS models. Two main differences distinguish their approach from ours: the focus is on abstract model checking and not on partial system specification; and their proposal does not refer to a known change theory. 
+
+
+\section{Conclusion}
+\label{secCon}
+In this paper we presented a new approach to the revision of a set of CTL models through the revision of a KMTS model. We considered the revision of KMTS both when the satisfiability of a property is undefined or is inconsistent with the model. We defined a minimality criterion relative to KMTS repair and proved that it preserves the minimality criterion relative to the repair of its set of expanded CTL models as in \cite{GW10}. We presented an algorithm to implement the revision in case the property is undefined. The design of an algorithm for the repair of the KMTS in case the property is false is our next goal. 
+
+The work presented here is a first step towards a framework for the automatic repair of partial specifications. In this version of this work we considered only changes of labels of states and the removal of transitions. We aim to propose a generalization of this solution from an extension of the approach presented here.  
+
+\vspace*{-.3cm}
+
+\subsubsection*{Acknowledgments.} The first author was supported by the grant \#2010/15392-3, S\~{a}o Paulo Research Foundation (FAPESP). The second author was supported by the grant \#2012/16308-1, S\~{a}o Paulo Research Foundation (FAPESP). The third author was supported by Brazilian Research Council (CNPq) grant \#304043/2010-9.
+
+\bibliographystyle{splncs}
+\bibliography{bibliografia}
+
+\end{document}

@@ -1,0 +1,10 @@
+#!/bin/bash
+txt="bison grammarFormulas.y "
+txt1="flex lexicoFormulas.lex"
+txt2="g++ -g -o repair *.cpp"
+$txt
+$txt1
+$txt2
+
+
+
